@@ -1,0 +1,19 @@
+{
+  "app": { "name": "Bloom", "tagline": "Votre compagne pendant la grossesse et au-delà." },
+  "auth": {
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "haveAccount": "Vous avez déjà un compte ? Connectez-vous",
+    "noAccount": "Nouvelle ici ? Créez un compte"
+  },
+  "tabs": { "home": "Accueil", "track": "Suivi", "chat": "Chat", "learn": "Apprendre", "profile": "Profil" },
+  "home": { "greeting": "Bonjour", "dailyTip": "Conseil du jour", "quickActions": "Actions rapides", "week": "Semaine" },
+  "track": { "symptom": "Symptôme", "mood": "Humeur", "weight": "Poids", "logSymptom": "Enregistrer un symptôme", "severity": "Gravité", "howFeeling": "Comment vous sentez-vous ?" },
+  "chat": { "placeholder": "Tapez un message…", "empty": "Demandez à Bloom tout ce qui concerne votre grossesse." },
+  "learn": { "development": "Développement", "babyNames": "Explorateur de prénoms", "suggestNames": "Suggérer des prénoms" },
+  "profile": { "account": "Compte", "pregnancy": "Grossesse", "settings": "Paramètres", "partnerMode": "Mode partenaire", "postpartumMode": "Mode post-partum", "signOut": "Se déconnecter" },
+  "features": { "birthPlan": "Projet de naissance", "hospitalBag": "Valise de maternité", "contractionTimer": "Minuteur de contractions" },
+  "common": { "next": "Suivant", "back": "Retour", "finish": "Terminer", "save": "Enregistrer", "loading": "Chargement…" }
+}

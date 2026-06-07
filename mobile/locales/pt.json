@@ -1,0 +1,19 @@
+{
+  "app": { "name": "Bloom", "tagline": "Sua companheira durante a gravidez e além." },
+  "auth": {
+    "signIn": "Entrar",
+    "createAccount": "Criar conta",
+    "email": "E-mail",
+    "password": "Senha",
+    "haveAccount": "Já tem uma conta? Entre",
+    "noAccount": "Nova por aqui? Crie uma conta"
+  },
+  "tabs": { "home": "Início", "track": "Registro", "chat": "Chat", "learn": "Aprender", "profile": "Perfil" },
+  "home": { "greeting": "Olá", "dailyTip": "Dica do dia", "quickActions": "Ações rápidas", "week": "Semana" },
+  "track": { "symptom": "Sintoma", "mood": "Humor", "weight": "Peso", "logSymptom": "Registrar um sintoma", "severity": "Gravidade", "howFeeling": "Como você está se sentindo?" },
+  "chat": { "placeholder": "Digite uma mensagem…", "empty": "Pergunte à Bloom qualquer coisa sobre sua gravidez." },
+  "learn": { "development": "Desenvolvimento", "babyNames": "Explorador de nomes", "suggestNames": "Sugerir nomes" },
+  "profile": { "account": "Conta", "pregnancy": "Gravidez", "settings": "Configurações", "partnerMode": "Modo parceiro", "postpartumMode": "Modo pós-parto", "signOut": "Sair" },
+  "features": { "birthPlan": "Plano de parto", "hospitalBag": "Bolsa da maternidade", "contractionTimer": "Cronômetro de contrações" },
+  "common": { "next": "Próximo", "back": "Voltar", "finish": "Concluir", "save": "Salvar", "loading": "Carregando…" }
+}

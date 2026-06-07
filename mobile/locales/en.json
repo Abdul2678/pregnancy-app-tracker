@@ -1,0 +1,19 @@
+{
+  "app": { "name": "Bloom", "tagline": "Your companion through pregnancy and beyond." },
+  "auth": {
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "haveAccount": "Already have an account? Sign in",
+    "noAccount": "New here? Create an account"
+  },
+  "tabs": { "home": "Home", "track": "Track", "chat": "Chat", "learn": "Learn", "profile": "Profile" },
+  "home": { "greeting": "Hello", "dailyTip": "Today's Tip", "quickActions": "Quick Actions", "week": "Week" },
+  "track": { "symptom": "Symptom", "mood": "Mood", "weight": "Weight", "logSymptom": "Log a Symptom", "severity": "Severity", "howFeeling": "How are you feeling?" },
+  "chat": { "placeholder": "Type a message…", "empty": "Ask Bloom anything about your pregnancy." },
+  "learn": { "development": "Development", "babyNames": "Baby Name Explorer", "suggestNames": "Suggest Names" },
+  "profile": { "account": "Account", "pregnancy": "Pregnancy", "settings": "Settings", "partnerMode": "Partner mode", "postpartumMode": "Postpartum mode", "signOut": "Sign Out" },
+  "features": { "birthPlan": "Birth Plan", "hospitalBag": "Hospital Bag", "contractionTimer": "Contraction Timer" },
+  "common": { "next": "Next", "back": "Back", "finish": "Finish", "save": "Save", "loading": "Loading…" }
+}

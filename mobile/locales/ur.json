@@ -1,0 +1,19 @@
+{
+  "app": { "name": "بلوم", "tagline": "حمل اور اس کے بعد آپ کی ساتھی۔" },
+  "auth": {
+    "signIn": "سائن ان کریں",
+    "createAccount": "اکاؤنٹ بنائیں",
+    "email": "ای میل",
+    "password": "پاس ورڈ",
+    "haveAccount": "پہلے سے اکاؤنٹ ہے؟ سائن ان کریں",
+    "noAccount": "نئی ہیں؟ اکاؤنٹ بنائیں"
+  },
+  "tabs": { "home": "ہوم", "track": "ٹریک", "chat": "چیٹ", "learn": "سیکھیں", "profile": "پروفائل" },
+  "home": { "greeting": "السلام علیکم", "dailyTip": "آج کا مشورہ", "quickActions": "فوری اقدامات", "week": "ہفتہ" },
+  "track": { "symptom": "علامت", "mood": "موڈ", "weight": "وزن", "logSymptom": "علامت درج کریں", "severity": "شدت", "howFeeling": "آپ کیسا محسوس کر رہی ہیں؟" },
+  "chat": { "placeholder": "پیغام لکھیں…", "empty": "اپنے حمل کے بارے میں بلوم سے کچھ بھی پوچھیں۔" },
+  "learn": { "development": "نشوونما", "babyNames": "نام تلاش کریں", "suggestNames": "نام تجویز کریں" },
+  "profile": { "account": "اکاؤنٹ", "pregnancy": "حمل", "settings": "ترتیبات", "partnerMode": "پارٹنر موڈ", "postpartumMode": "بعد از ولادت موڈ", "signOut": "سائن آؤٹ" },
+  "features": { "birthPlan": "پیدائش کا منصوبہ", "hospitalBag": "ہسپتال بیگ", "contractionTimer": "سکڑاؤ ٹائمر" },
+  "common": { "next": "اگلا", "back": "واپس", "finish": "مکمل", "save": "محفوظ کریں", "loading": "لوڈ ہو رہا ہے…" }
+}

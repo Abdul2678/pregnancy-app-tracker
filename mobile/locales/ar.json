@@ -1,0 +1,19 @@
+{
+  "app": { "name": "بلوم", "tagline": "رفيقتك خلال الحمل وما بعده." },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "createAccount": "إنشاء حساب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "haveAccount": "لديك حساب بالفعل؟ سجّلي الدخول",
+    "noAccount": "جديدة هنا؟ أنشئي حسابًا"
+  },
+  "tabs": { "home": "الرئيسية", "track": "التتبع", "chat": "المحادثة", "learn": "تعلّم", "profile": "الملف" },
+  "home": { "greeting": "مرحبًا", "dailyTip": "نصيحة اليوم", "quickActions": "إجراءات سريعة", "week": "الأسبوع" },
+  "track": { "symptom": "عرض", "mood": "المزاج", "weight": "الوزن", "logSymptom": "تسجيل عرض", "severity": "الشدة", "howFeeling": "كيف تشعرين؟" },
+  "chat": { "placeholder": "اكتبي رسالة…", "empty": "اسألي بلوم أي شيء عن حملك." },
+  "learn": { "development": "التطور", "babyNames": "مستكشف الأسماء", "suggestNames": "اقتراح أسماء" },
+  "profile": { "account": "الحساب", "pregnancy": "الحمل", "settings": "الإعدادات", "partnerMode": "وضع الشريك", "postpartumMode": "وضع ما بعد الولادة", "signOut": "تسجيل الخروج" },
+  "features": { "birthPlan": "خطة الولادة", "hospitalBag": "حقيبة المستشفى", "contractionTimer": "مؤقت الانقباضات" },
+  "common": { "next": "التالي", "back": "رجوع", "finish": "إنهاء", "save": "حفظ", "loading": "جارٍ التحميل…" }
+}

@@ -1,0 +1,19 @@
+{
+  "app": { "name": "ब्लूम", "tagline": "गर्भावस्था और उसके आगे आपकी साथी।" },
+  "auth": {
+    "signIn": "साइन इन करें",
+    "createAccount": "खाता बनाएं",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "haveAccount": "पहले से खाता है? साइन इन करें",
+    "noAccount": "नई हैं? खाता बनाएं"
+  },
+  "tabs": { "home": "होम", "track": "ट्रैक", "chat": "चैट", "learn": "सीखें", "profile": "प्रोफ़ाइल" },
+  "home": { "greeting": "नमस्ते", "dailyTip": "आज की सलाह", "quickActions": "त्वरित क्रियाएँ", "week": "सप्ताह" },
+  "track": { "symptom": "लक्षण", "mood": "मनोदशा", "weight": "वज़न", "logSymptom": "लक्षण दर्ज करें", "severity": "गंभीरता", "howFeeling": "आप कैसा महसूस कर रही हैं?" },
+  "chat": { "placeholder": "संदेश लिखें…", "empty": "अपनी गर्भावस्था के बारे में ब्लूम से कुछ भी पूछें।" },
+  "learn": { "development": "विकास", "babyNames": "नाम खोजक", "suggestNames": "नाम सुझाएं" },
+  "profile": { "account": "खाता", "pregnancy": "गर्भावस्था", "settings": "सेटिंग्स", "partnerMode": "साथी मोड", "postpartumMode": "प्रसवोत्तर मोड", "signOut": "साइन आउट" },
+  "features": { "birthPlan": "जन्म योजना", "hospitalBag": "अस्पताल बैग", "contractionTimer": "संकुचन टाइमर" },
+  "common": { "next": "आगे", "back": "पीछे", "finish": "समाप्त", "save": "सहेजें", "loading": "लोड हो रहा है…" }
+}
