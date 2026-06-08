@@ -31,10 +31,10 @@ Return exactly:
  * runSymptomPatternJob() — run once over all users with recent symptoms.
  */
 async function runSymptomPatternJob() {
-  // eslint-disable-next-line no-console
   console.log('[job:symptomPattern] starting weekly run');
+
   const { rows: users } = await db.query(
-    `SELECT DISTINCT user_id FROM symptoms WHERE logged_at > now() - interval '7 days'`
+    `SELECT DISTINCT user_id FROM symptom_logs WHERE logged_at > now() - interval '7 days'`
   );
 
   let processed = 0;
@@ -42,30 +42,36 @@ async function runSymptomPatternJob() {
     try {
       const [{ rows: symptoms }, { rows: profileRows }] = await Promise.all([
         db.query(
-          `SELECT symptom_text, severity, duration_hours, week, logged_at
-           FROM symptoms WHERE user_id = $1 AND logged_at > now() - interval '7 days'
+          `SELECT symptom_name, description, severity, duration_hours, logged_at
+           FROM symptom_logs
+           WHERE user_id = $1 AND logged_at > now() - interval '7 days'
            ORDER BY logged_at ASC`,
           [userId]
         ),
         db.query(`SELECT * FROM user_profiles WHERE user_id = $1`, [userId]),
       ]);
+
       if (!symptoms.length) continue;
-      const profile = rowToProfile(profileRows[0]);
+
+      const profile  = rowToProfile(profileRows[0]);
       const analysis = await analyseUserSymptoms(userId, profile, symptoms);
 
       // Store the insight on the most recent symptom row as a rolling weekly summary.
       await db.query(
-        `UPDATE symptoms SET triage_result = COALESCE(triage_result, '{}'::jsonb) || $2::jsonb
-         WHERE id = (SELECT id FROM symptoms WHERE user_id = $1 ORDER BY logged_at DESC LIMIT 1)`,
+        `UPDATE symptom_logs
+         SET ai_triage_result = COALESCE(ai_triage_result, '{}'::jsonb) || $2::jsonb
+         WHERE id = (
+           SELECT id FROM symptom_logs WHERE user_id = $1 ORDER BY logged_at DESC LIMIT 1
+         )`,
         [userId, JSON.stringify({ weeklyPattern: analysis })]
       );
+
       processed += 1;
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`[job:symptomPattern] failed for user ${userId}`, err.message);
     }
   }
-  // eslint-disable-next-line no-console
+
   console.log(`[job:symptomPattern] done — processed ${processed} users`);
   return { processed };
 }
@@ -77,11 +83,9 @@ function scheduleSymptomPatternJob() {
   const expr = process.env.SYMPTOM_JOB_CRON || '0 6 * * 1';
   const task = cron.schedule(expr, () => {
     runSymptomPatternJob().catch((err) => {
-      // eslint-disable-next-line no-console
       console.error('[job:symptomPattern] unhandled error', err);
     });
   });
-  // eslint-disable-next-line no-console
   console.log(`[job:symptomPattern] scheduled (${expr})`);
   return task;
 }

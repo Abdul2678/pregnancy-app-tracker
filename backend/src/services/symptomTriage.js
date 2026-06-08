@@ -1,39 +1,7 @@
 // services/symptomTriage.js
-// Processes a symptom log: runs AI triage and persists the result.
+// Thin wrapper — delegates to the full AI service implementation.
+// Kept for backwards compatibility with routes that import from this path.
 
-const { jsonCall } = require('../lib/claude');
-const { buildSymptomTriagePrompt } = require('../prompts/symptomTriagePrompt');
-const db = require('../db');
-
-/**
- * triageSymptom({ userId, profile, symptomText, severity, durationHours })
- * Returns the persisted symptom row including the triage result.
- */
-async function triageSymptom({ userId, profile = {}, symptomText, severity, durationHours }) {
-  const { system, user } = buildSymptomTriagePrompt({
-    user: profile,
-    symptomText,
-    severity,
-    durationHours,
-  });
-
-  const triage = await jsonCall({ system, userPrompt: user, maxTokens: 700 });
-
-  const { rows } = await db.query(
-    `INSERT INTO symptoms (user_id, symptom_text, severity, duration_hours, week, triage_result)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING *`,
-    [
-      userId,
-      symptomText,
-      severity ?? null,
-      durationHours ?? null,
-      profile.currentWeek ?? null,
-      JSON.stringify(triage),
-    ]
-  );
-
-  return { ...rows[0], triage_result: triage };
-}
+const { triageSymptom } = require('./ai/symptomTriage');
 
 module.exports = { triageSymptom };
