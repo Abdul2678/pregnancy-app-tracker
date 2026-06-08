@@ -14,6 +14,7 @@ const { buildBabyNamePrompt } = require('../../prompts/babyNamePrompt');
 const { getWeekContent } = require('../../services/weeklyContent');
 const { getProfile } = require('../../services/profiles');
 
+const { ok } = require('../middleware/respond');
 const router = express.Router();
 
 // ── Birth plan ─────────────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ router.post('/birth-plan', authRequired, aiLimiter, validate(birthPlanSchema), a
     const profile = (await getProfile(req.user.id)) || {};
     const { system, user } = buildBirthPlanPrompt({ user: profile, preferences: req.body.preferences });
     const plan = await jsonCall({ system, userPrompt: user, maxTokens: 1500 });
-    return res.json({ plan });
+    return res.json({ success: true, data: { plan } });
   } catch (err) {
     return next(err);
   }
@@ -52,7 +53,7 @@ Return exactly:
   ]
 }`;
     const checklist = await jsonCall({ system, userPrompt: user, maxTokens: 1200 });
-    return res.json({ checklist });
+    return res.json({ success: true, data: { checklist } });
   } catch (err) {
     return next(err);
   }
@@ -87,7 +88,7 @@ router.post('/baby-names', authRequired, aiLimiter, validate(babyNameSchema), as
         [req.user.id, s.name, s.gender || null, s.origin || null, s.meaning || null, s.pronunciation || null]
       );
     }
-    return res.json({ suggestions: result.suggestions || [] });
+    return res.json({ success: true, data: { suggestions: result.suggestions || [] } });
   } catch (err) {
     return next(err);
   }
@@ -97,7 +98,7 @@ router.post('/baby-names', authRequired, aiLimiter, validate(babyNameSchema), as
 router.get('/development/:week', authRequired, apiLimiter, async (req, res, next) => {
   try {
     const week = Number(req.params.week);
-    if (!Number.isInteger(week)) return res.status(400).json({ error: 'Invalid week' });
+    if (!Number.isInteger(week)) return res.status(400).json({ success: false, error: 'Invalid week' });
     const profile = (await getProfile(req.user.id)) || {};
     const content = await getWeekContent({
       week,
@@ -105,7 +106,7 @@ router.get('/development/:week', authRequired, apiLimiter, async (req, res, next
       language: profile.language || 'English',
       phase: 'pregnancy',
     });
-    return res.json({ week, development: content });
+    return res.json({ success: true, data: { week, development: content } });
   } catch (err) {
     return next(err);
   }

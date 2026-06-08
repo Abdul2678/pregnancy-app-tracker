@@ -1,22 +1,23 @@
-// api/middleware/validate.js
-// Zod request validation helper.
+// middleware/validate.js
+// Zod request validation middleware.
+
+const { fail } = require('./respond');
 
 /**
- * validate(schema, source) — returns middleware validating req[source] against a
- * Zod schema. On success, the parsed value replaces req[source]. On failure,
- * responds 400 with the issues.
+ * validate(schema, source?)
+ * Validates req[source] against a Zod schema.
+ * On success:  req[source] is replaced with the parsed (coerced) value.
+ * On failure:  responds 400 with { success: false, error, details: [{path, message}] }
  */
 function validate(schema, source = 'body') {
   return (req, res, next) => {
     const result = schema.safeParse(req[source]);
     if (!result.success) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        issues: result.error.issues.map((i) => ({
-          path: i.path.join('.'),
-          message: i.message,
-        })),
-      });
+      const details = result.error.issues.map((i) => ({
+        path:    i.path.join('.'),
+        message: i.message,
+      }));
+      return fail(res, 'Validation failed', 400, details);
     }
     req[source] = result.data;
     return next();
