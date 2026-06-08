@@ -1,5 +1,5 @@
 // app/_layout.tsx
-// Root layout: Redux Provider + auth guard + navigation.
+// Root layout: Redux Provider + auth + onboarding guard + navigation.
 
 import React, { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -12,10 +12,11 @@ import { bootstrapAuth } from '../store/authSlice';
 import '../lib/i18n';
 
 function AuthGate() {
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const segments = useSegments();
+  const dispatch  = useAppDispatch();
+  const router    = useRouter();
+  const segments  = useSegments();
   const { status, bootstrapped } = useAppSelector((s) => s.auth);
+  const { onboardingCompleted }  = useAppSelector((s) => s.profile);
 
   useEffect(() => {
     dispatch(bootstrapAuth());
@@ -23,25 +24,39 @@ function AuthGate() {
 
   useEffect(() => {
     if (!bootstrapped) return;
-    const inAuthGroup = segments[0] === '(auth)';
-    const isAuthed = status === 'authenticated';
+
+    const inAuthGroup       = segments[0] === '(auth)';
+    const onOnboarding      = segments[1] === 'onboarding';
+    const isAuthed          = status === 'authenticated';
+    const needsOnboarding   = isAuthed && !onboardingCompleted;
 
     if (!isAuthed && !inAuthGroup) {
+      // Not logged in → sign-in screen
       router.replace('/(auth)');
-    } else if (isAuthed && inAuthGroup) {
+    } else if (isAuthed && needsOnboarding && !onOnboarding) {
+      // Logged in but onboarding not done → onboarding
+      router.replace('/(auth)/onboarding');
+    } else if (isAuthed && onboardingCompleted && inAuthGroup) {
+      // Fully onboarded → main app
       router.replace('/(tabs)');
     }
-  }, [status, bootstrapped, segments, router]);
+  }, [status, bootstrapped, onboardingCompleted, segments, router]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="features/birth-plan" options={{ headerShown: true, title: 'Birth Plan' }} />
-      <Stack.Screen name="features/hospital-bag" options={{ headerShown: true, title: 'Hospital Bag' }} />
+      <Stack.Screen
+        name="features/birth-plan"
+        options={{ headerShown: true, title: 'Birth Plan', headerTintColor: '#CC6E9A' }}
+      />
+      <Stack.Screen
+        name="features/hospital-bag"
+        options={{ headerShown: true, title: 'Hospital Bag', headerTintColor: '#CC6E9A' }}
+      />
       <Stack.Screen
         name="features/contraction-timer"
-        options={{ headerShown: true, title: 'Contraction Timer' }}
+        options={{ headerShown: true, title: 'Contraction Timer', headerTintColor: '#CC6E9A' }}
       />
     </Stack>
   );
