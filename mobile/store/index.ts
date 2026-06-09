@@ -9,9 +9,10 @@ import chat from './chatSlice';
 import tracking from './trackingSlice';
 import profile from './profileSlice';
 import home from './homeSlice';
+import development from './developmentSlice';
 
 export const store = configureStore({
-  reducer: { auth, chat, tracking, profile, home },
+  reducer: { auth, chat, tracking, profile, home, development },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });
