@@ -9,8 +9,10 @@ const { validate }      = require('../middleware/validate');
 const { authRequired }  = require('../middleware/auth');
 const { aiLimiter, apiLimiter } = require('../middleware/rateLimit');
 const { ok }            = require('../middleware/respond');
-const { sendMessage }   = require('../../services/session');
+const { sendMessage, containsEmergencyKeyword, EMERGENCY_RESPONSE } = require('../../services/session');
 const { getProfile }    = require('../../services/profiles');
+const { chatStream }    = require('../../services/claude');
+const { buildSystemPrompt } = require('../../prompts/systemPrompt');
 
 const router = express.Router();
 
@@ -61,6 +63,70 @@ router.post('/', authRequired, aiLimiter, validate(chatSchema), async (req, res,
 
     return ok(res, { reply, emergency: emergency || false, conversationId: conversation.id });
   } catch (err) { return next(err); }
+});
+
+// POST /chat/stream — Server-Sent Events streaming endpoint
+router.post('/stream', authRequired, aiLimiter, validate(chatSchema), async (req, res, next) => {
+  try {
+    const profile = (await getProfile(req.user.id)) || {};
+    const mode = profile.partnerMode ? 'partner' : profile.postpartum ? 'postpartum' : 'standard';
+    const conversation = await getOrCreate(req.user.id, req.body.conversationId, mode);
+
+    // Hard safety check — bypass AI entirely
+    if (containsEmergencyKeyword(req.body.message)) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+
+      await db.query('INSERT INTO messages (conversation_id, user_id, role, content) VALUES ($1,$2,$3,$4)',
+        [conversation.id, req.user.id, 'user', req.body.message]);
+      await db.query('INSERT INTO messages (conversation_id, user_id, role, content, is_emergency) VALUES ($1,$2,$3,$4,$5)',
+        [conversation.id, req.user.id, 'assistant', EMERGENCY_RESPONSE, true]);
+      await db.query('UPDATE conversations SET updated_at = now() WHERE id = $1', [conversation.id]);
+
+      res.write(`data: ${JSON.stringify({ text: EMERGENCY_RESPONSE })}\n\n`);
+      res.write(`data: ${JSON.stringify({ done: true, emergency: true, conversationId: conversation.id })}\n\n`);
+      return res.end();
+    }
+
+    const { rows: history } = await db.query(
+      'SELECT role, content FROM messages WHERE conversation_id = $1 ORDER BY created_at ASC LIMIT 40',
+      [conversation.id]
+    );
+
+    const systemPrompt = buildSystemPrompt(profile);
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    let fullReply = '';
+    const stream = chatStream({ systemPrompt, history, newMessage: req.body.message, maxTokens: 1200 });
+
+    for await (const chunk of stream) {
+      fullReply += chunk;
+      res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
+    }
+
+    const isEmergency = /emergency|seek care immediately|call 9(11|99)|go to (the )?(hospital|er|emergency)/i.test(fullReply);
+
+    await db.query('INSERT INTO messages (conversation_id, user_id, role, content) VALUES ($1,$2,$3,$4)',
+      [conversation.id, req.user.id, 'user', req.body.message]);
+    await db.query('INSERT INTO messages (conversation_id, user_id, role, content, is_emergency) VALUES ($1,$2,$3,$4,$5)',
+      [conversation.id, req.user.id, 'assistant', fullReply, isEmergency]);
+    await db.query('UPDATE conversations SET updated_at = now() WHERE id = $1', [conversation.id]);
+
+    res.write(`data: ${JSON.stringify({ done: true, emergency: isEmergency, conversationId: conversation.id })}\n\n`);
+    return res.end();
+  } catch (err) {
+    if (!res.headersSent) return next(err);
+    try {
+      res.write(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`);
+      res.end();
+    } catch (_) {}
+  }
 });
 
 router.get('/history', authRequired, apiLimiter, async (req, res, next) => {
