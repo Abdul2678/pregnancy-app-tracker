@@ -27,6 +27,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="track"
         options={{
+          headerShown: false,
           title: 'Track',
           tabBarIcon: ({ color, size }) => <Ionicons name="pulse" color={color} size={size} />,
         }}
