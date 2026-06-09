@@ -58,6 +58,10 @@ function AuthGate() {
         name="features/contraction-timer"
         options={{ headerShown: true, title: 'Contraction Timer', headerTintColor: '#CC6E9A' }}
       />
+      <Stack.Screen
+        name="features/kick-counter"
+        options={{ headerShown: true, title: 'Kick Counter', headerTintColor: '#CC6E9A' }}
+      />
     </Stack>
   );
 }
