@@ -62,6 +62,10 @@ function AuthGate() {
         name="features/kick-counter"
         options={{ headerShown: true, title: 'Kick Counter', headerTintColor: '#CC6E9A' }}
       />
+      <Stack.Screen
+        name="features/mental-health"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }

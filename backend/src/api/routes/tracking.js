@@ -146,6 +146,57 @@ router.post('/mood', authRequired, aiLimiter, validate(moodSchema), async (req, 
   } catch (err) { return next(err); }
 });
 
+// GET /mood/history — daily aggregates for chart (up to 90 days)
+router.get('/mood/history', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const days = Math.min(Number(req.query.days) || 30, 90);
+    const { rows } = await db.query(
+      `SELECT
+         DATE(logged_at AT TIME ZONE 'UTC')::text AS date,
+         ROUND(AVG(mood_score)::numeric, 1)::float AS avg_score,
+         COUNT(*)::int AS count,
+         (array_agg(mood ORDER BY logged_at DESC))[1] AS mood,
+         (array_agg(risk_level ORDER BY logged_at DESC))[1] AS risk_level
+       FROM mood_logs
+       WHERE user_id = $1
+         AND logged_at >= NOW() - (INTERVAL '1 day' * $2)
+         AND mood_score IS NOT NULL
+       GROUP BY DATE(logged_at AT TIME ZONE 'UTC')
+       ORDER BY date ASC`,
+      [req.user.id, days]
+    );
+    return ok(res, { days: rows, count: rows.length });
+  } catch (err) { return next(err); }
+});
+
+// GET /mood/streak — consecutive check-in days
+router.get('/mood/streak', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT DISTINCT DATE(logged_at AT TIME ZONE 'UTC')::text AS date
+       FROM mood_logs WHERE user_id = $1
+       ORDER BY date DESC LIMIT 60`,
+      [req.user.id]
+    );
+    let streak = 0;
+    const todayUTC = new Date();
+    todayUTC.setUTCHours(0, 0, 0, 0);
+
+    for (let i = 0; i < rows.length; i++) {
+      const d = new Date(rows[i].date);
+      d.setUTCHours(0, 0, 0, 0);
+      const diffDays = Math.round((todayUTC.getTime() - d.getTime()) / 86400000);
+      // streak counts today (diff=0) or yesterday (diff=1 on first iteration)
+      if (diffDays === i || (i === 0 && diffDays === 1)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return ok(res, { streak, lastCheckedIn: rows[0]?.date || null });
+  } catch (err) { return next(err); }
+});
+
 router.get('/mood', authRequired, apiLimiter, validate(pagination, 'query'), async (req, res, next) => {
   try {
     const { limit, offset } = req.query;

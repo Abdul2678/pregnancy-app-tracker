@@ -10,9 +10,10 @@ import tracking from './trackingSlice';
 import profile from './profileSlice';
 import home from './homeSlice';
 import development from './developmentSlice';
+import mentalHealth from './mentalHealthSlice';
 
 export const store = configureStore({
-  reducer: { auth, chat, tracking, profile, home, development },
+  reducer: { auth, chat, tracking, profile, home, development, mentalHealth },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });
