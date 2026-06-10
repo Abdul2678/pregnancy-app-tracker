@@ -33,6 +33,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="plan"
+        options={{
+          headerShown: false,
+          title: 'Plan',
+          tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="chat"
         options={{
           headerShown: false,
