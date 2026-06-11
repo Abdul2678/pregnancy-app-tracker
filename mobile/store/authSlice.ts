@@ -43,7 +43,18 @@ export const register = createAsyncThunk(
 
 export const bootstrapAuth = createAsyncThunk('auth/bootstrap', async () => {
   const token = await getAccessToken();
-  return Boolean(token);
+  if (!token) return null;
+  try {
+    const { data } = await api.get('/user/profile');
+    const p = data?.data ?? data;
+    return {
+      id:          p.id ?? p.userId ?? '',
+      email:       p.email ?? '',
+      accountType: (p.accountType ?? p.account_type ?? 'primary') as 'primary' | 'partner',
+    } as AuthUser;
+  } catch {
+    return null;
+  }
 });
 
 export const logout = createAsyncThunk('auth/logout', async () => {
@@ -61,34 +72,19 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (s) => {
-        s.status = 'loading';
-        s.error = null;
-      })
-      .addCase(login.fulfilled, (s, a) => {
-        s.status = 'authenticated';
-        s.user = a.payload;
-      })
-      .addCase(login.rejected, (s, a) => {
-        s.status = 'error';
-        s.error = a.error.message ?? 'Login failed';
-      })
-      .addCase(register.fulfilled, (s, a) => {
-        s.status = 'authenticated';
-        s.user = a.payload;
-      })
-      .addCase(register.rejected, (s, a) => {
-        s.status = 'error';
-        s.error = a.error.message ?? 'Registration failed';
-      })
+      .addCase(login.pending, (s) => { s.status = 'loading'; s.error = null; })
+      .addCase(login.fulfilled, (s, a) => { s.status = 'authenticated'; s.user = a.payload; })
+      .addCase(login.rejected, (s, a) => { s.status = 'error'; s.error = a.error.message ?? 'Login failed'; })
+      .addCase(register.fulfilled, (s, a) => { s.status = 'authenticated'; s.user = a.payload; })
+      .addCase(register.rejected, (s, a) => { s.status = 'error'; s.error = a.error.message ?? 'Registration failed'; })
       .addCase(bootstrapAuth.fulfilled, (s, a) => {
         s.bootstrapped = true;
-        if (a.payload) s.status = 'authenticated';
+        if (a.payload) {
+          s.user   = a.payload;
+          s.status = 'authenticated';
+        }
       })
-      .addCase(logout.fulfilled, (s) => {
-        s.user = null;
-        s.status = 'idle';
-      });
+      .addCase(logout.fulfilled, (s) => { s.user = null; s.status = 'idle'; });
   },
 });
 
