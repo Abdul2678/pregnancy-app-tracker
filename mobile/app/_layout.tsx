@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 
 import { store, useAppDispatch, useAppSelector } from '../store';
 import { bootstrapAuth } from '../store/authSlice';
+import { loadSettings } from '../store/settingsSlice';
 import '../lib/i18n';
 
 function AuthGate() {
@@ -19,6 +20,7 @@ function AuthGate() {
   const { onboardingCompleted }        = useAppSelector((s) => s.profile);
 
   useEffect(() => {
+    dispatch(loadSettings());
     dispatch(bootstrapAuth());
   }, [dispatch]);
 
@@ -55,6 +57,7 @@ function AuthGate() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(partner)" />
+      <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen
         name="features/birth-plan"
         options={{ headerShown: true, title: 'Birth Plan', headerTintColor: '#CC6E9A' }}

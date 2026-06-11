@@ -1,0 +1,127 @@
+{
+  "app": { "name": "Bloom", "tagline": "Hamilelik sürecinizde ve sonrasında yanınızdaki arkadaşınız." },
+  "auth": {
+    "signIn": "Giriş Yap", "createAccount": "Hesap Oluştur", "email": "E-posta", "password": "Şifre",
+    "haveAccount": "Zaten hesabınız var mı? Giriş yapın", "noAccount": "Yeni misiniz? Hesap oluşturun",
+    "joinPartner": "Eş olarak katıl", "joinPartnerSub": "Eşinizin uygulamasındaki 6 haneli kodu girin",
+    "backToSignIn": "← Girişe Geri Dön"
+  },
+  "onboarding": {
+    "welcome": "Bloom'a Hoş Geldiniz", "welcomeSub": "Deneyiminizi kişiselleştirelim",
+    "dueDate": "Bebeğinizin tahmini doğum tarihi nedir?", "country": "Hangi ülkedesiniz?",
+    "language": "Tercih edilen dil", "firstPregnancy": "Bu ilk hamileliğiniz mi?",
+    "firstYes": "Evet, ilk kez", "firstNo": "Daha önce yaşadım",
+    "healthConditions": "Bilmemizi istediğiniz sağlık durumlarınız var mı?",
+    "goals": "Sizin için en önemli olan nedir?", "complete": "Hazırız! Hadi başlayalım."
+  },
+  "tabs": { "home": "Ana Sayfa", "track": "Takip", "chat": "Sohbet", "plan": "Plan", "baby": "Bebek", "profile": "Profil" },
+  "home": {
+    "greeting": "Merhaba", "weekLabel": "Hafta", "weeksLeft": "{{count}} hafta kaldı",
+    "dueDate": "Doğum tarihi: {{date}}", "dailyTip": "Günün ipucu", "quickActions": "Hızlı İşlemler",
+    "kickCounter": "Tekme Sayacı", "contractionTimer": "Kasılma Sayacı",
+    "upcomingAppointments": "Yaklaşan Randevular", "noAppointments": "Yaklaşan randevu yok",
+    "moodCheckIn": "Bugün nasıl hissediyorsunuz?", "partnerInvite": "Eşinizi davet edin",
+    "partnerInviteSub": "Yolculuğunuzu takip etmelerine izin verin",
+    "generateCode": "Davet kodu oluştur", "babySize": "Bebeğiniz yaklaşık {{size}} büyüklüğünde",
+    "weeksPregnant": "{{count}} haftalık hamile"
+  },
+  "track": {
+    "title": "Takip", "symptom": "Belirti", "symptoms": "Belirtiler", "mood": "Ruh Hali",
+    "weight": "Kilo", "kicks": "Tekme Sayacı", "contractions": "Kasılmalar",
+    "logSymptom": "Belirti Kaydet", "logMood": "Ruh Halini Kaydet", "logWeight": "Kiloyu Kaydet",
+    "severity": "Şiddet", "howFeeling": "Nasıl hissediyorsunuz?", "selectMood": "Ruh halinizi seçin",
+    "addNote": "Not ekle (isteğe bağlı)", "saved": "Kaydedildi!", "errorSaving": "Kaydedilemedi.",
+    "mild": "Hafif", "moderate": "Orta", "severe": "Şiddetli",
+    "recentLogs": "Son Kayıtlar", "noLogs": "Henüz kayıt yok — takip etmeye başlayın!",
+    "weightLabel": "Kilonuz", "weightHistory": "Kilo geçmişi",
+    "kicksStart": "Saymaya başla", "kicksStop": "Bitti", "kicksTargetMet": "Hedefe ulaşıldı! 🎉",
+    "contractionStart": "Kasılma başlıyor", "contractionStop": "Kasılma bitiyor",
+    "contractionAlert": "Kasılmalar {{interval}} dakikada bir — doktorunuzla iletişime geçin.",
+    "symptomList": {
+      "nausea": "Bulantı", "vomiting": "Kusma", "fatigue": "Yorgunluk", "headache": "Baş Ağrısı",
+      "backPain": "Bel Ağrısı", "swelling": "Şişlik", "heartburn": "Mide Yanması",
+      "braxton": "Braxton Hicks Kasılmaları", "cramping": "Kramp", "spotting": "Lekelenme",
+      "insomnia": "Uykusuzluk", "dizziness": "Baş Dönmesi", "shortBreath": "Nefes Darlığı",
+      "pelvicPain": "Pelvik Ağrı", "frequentUrination": "Sık İdrara Çıkma",
+      "foodAversions": "İştahsızlık", "cravings": "Aşerme", "breastTenderness": "Göğüs Hassasiyeti",
+      "moodSwings": "Ruh Hali Değişimleri", "constipation": "Kabızlık"
+    }
+  },
+  "chat": {
+    "title": "Bloom Yapay Zeka", "placeholder": "Hamileliğiniz hakkında her şeyi sorabilirsiniz…",
+    "empty": "Hamileliğiniz veya hissettikleriniz hakkında bana her şeyi sorabilirsiniz.",
+    "disclaimer": "Bloom Yapay Zeka genel bilgi verir, tıbbi tavsiye değildir.",
+    "disclaimerAccept": "Anladım", "emergency": "Bu acil görünüyor. Lütfen hemen yardım alın.",
+    "emergencyCall": "Acil Servis Ara", "typing": "Bloom düşünüyor…",
+    "suggested0": "Sabah bulantısına ne iyi gelir?", "suggested1": "Tekme saymaya ne zaman başlamalıyım?",
+    "suggested2": "Üçüncü trimesterde güvenli uyku pozisyonları?",
+    "suggested3": "Hamilelikte kaçınılması gereken yiyecekler?",
+    "suggested4": "Doğum belirtileri nelerdir?", "suggested5": "Erken hamilelikte kramp normal midir?"
+  },
+  "mentalHealth": {
+    "title": "Nasıl Hissediyorsunuz?", "subtitle": "Duygusal sağlığınız önemli",
+    "checkIn": "Bugünkü Kontrol", "checkInSub": "Şu an nasıl hissettiğinizi kaydetmek için dokunun",
+    "loggedToday": "Bugün kaydedildi", "seeMore": "Daha fazla", "streakLabel": "Gün serisi",
+    "weekSummary": "Bu hafta", "journalPrompt": "Gününüz hakkında yazın (isteğe bağlı)…",
+    "emotions": "Hangi duygular mevcut?", "aiResponse": "Bloom diyor ki",
+    "toughTimes": "Zor bir dönem mi geçiriyorsunuz?",
+    "toughTimesSub": "Yardım istemek tamam. Yalnız değilsiniz.",
+    "highScore": "Harika gidiyorsunuz", "midScore": "Bir günü bir günde atın", "lowScore": "Yanınızdayız",
+    "crisisMessage": "Kendinize zarar verme düşünceleriniz varsa lütfen hemen ulaşın.",
+    "mood1": "Çok Kötü", "mood2": "Kötü", "mood3": "İdare Eder", "mood4": "İyi", "mood5": "Harika"
+  },
+  "plan": {
+    "title": "Planlayıcı", "checklist": "Kontrol Listesi", "appointments": "Randevular",
+    "birthPlan": "Doğum Planı", "babyNames": "Bebek İsimleri", "addItem": "Öğe ekle",
+    "essential": "Zorunlu", "optional": "İsteğe bağlı", "progress": "{{done}} / {{total}} hazırlandı",
+    "shareChecklist": "Listeyi paylaş", "addAppointment": "Randevu Ekle",
+    "noAppointments": "Henüz randevu yok", "generatePlan": "Doğum planımı oluştur",
+    "generating": "Kişisel planınız hazırlanıyor…", "sharePlan": "Doğum planını paylaş",
+    "startOver": "Başa dön", "suggestNames": "İsim öner", "shortlist": "Kısa listem",
+    "nameOrigin": "Köken", "nameMeaning": "Anlam", "namePronunciation": "Telaffuz"
+  },
+  "partner": {
+    "title": "Eş Görünümü", "linked": "{{name}} bağlı 💕",
+    "linkedSub": "Haftalık güncellemelerinizi görebilirler",
+    "removePartner": "Eş erişimini kaldır", "inviteCode": "Bu kodu eşinizle paylaşın",
+    "codeExpiry": "48 saat içinde geçersiz", "shareCode": "Kodu paylaş",
+    "generateCode": "Davet kodu oluştur",
+    "privacyNote": "Haftalık güncellemeler, randevular, liste ve isimler her zaman paylaşılır.",
+    "codeEntry": "6 haneli kodu girin", "swipeHint": "← Hayır   •   Sev →",
+    "noNames": "Henüz listede isim yok"
+  },
+  "settings": {
+    "title": "Ayarlar", "language": "Dil", "units": "Ölçüm Birimleri",
+    "metric": "Metrik (kg, cm, °C)", "imperial": "Emperyal (lbs, inç, °F)",
+    "country": "Ülke", "timezone": "Saat Dilimi", "dateFormat": "Tarih Formatı",
+    "dateFormatDMY": "GG/AA/YYYY", "dateFormatMDY": "AA/GG/YYYY", "dateFormatYMD": "YYYY-AA-GG",
+    "notifications": "Bildirimler", "dailyTip": "Günlük ipucu",
+    "appointmentReminders": "Randevu hatırlatıcıları", "weeklyUpdate": "Haftalık güncelleme",
+    "saved": "Ayarlar kaydedildi",
+    "restartRequired": "Dil değişikliklerini uygulamak için uygulamayı yeniden başlatın.",
+    "weightUnit": "Ağırlık birimi", "temperatureUnit": "Sıcaklık",
+    "lengthUnit": "Ölçümler", "aboutApp": "Bloom Hakkında"
+  },
+  "profile": {
+    "title": "Profil", "account": "Hesap", "pregnancy": "Hamilelik",
+    "partner": "Eş Erişimi", "settings": "Ayarlar", "signOut": "Çıkış Yap", "openSettings": "Ayarları Aç"
+  },
+  "units": { "kg": "kg", "lbs": "lbs", "cm": "cm", "inches": "inç", "celsius": "°C", "fahrenheit": "°F", "weeks": "hafta", "days": "gün" },
+  "emergency": {
+    "title": "Acil İletişim", "urgent": "Bu acil görünüyor",
+    "seekCare": "Lütfen hemen acil yardım alın.", "callNow": "Şimdi Ara",
+    "emergencyNumber": "Acil", "maternalHotline": "Annelik Hattı", "mentalHealthLine": "Ruh Sağlığı Hattı"
+  },
+  "errors": {
+    "networkError": "İnternet bağlantısı yok.", "serverError": "Bir şeyler ters gitti. Tekrar deneyin.",
+    "tryAgain": "Tekrar dene", "required": "Bu alan zorunludur",
+    "invalidEmail": "Lütfen geçerli bir e-posta adresi girin",
+    "passwordTooShort": "Şifre en az 8 karakter olmalıdır"
+  },
+  "common": {
+    "next": "İleri", "back": "Geri", "finish": "Bitir", "save": "Kaydet", "cancel": "İptal",
+    "close": "Kapat", "loading": "Yükleniyor…", "error": "Hata", "yes": "Evet", "no": "Hayır",
+    "ok": "Tamam", "share": "Paylaş", "delete": "Sil", "add": "Ekle", "done": "Bitti",
+    "skip": "Atla", "confirm": "Onayla", "comingSoon": "Yakında"
+  }
+}

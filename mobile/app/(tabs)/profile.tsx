@@ -7,6 +7,7 @@ import {
   TouchableOpacity, ActivityIndicator, Share, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
@@ -31,6 +32,7 @@ function InfoRow({ label, value }: { label: string; value?: string | number | nu
 export default function Profile() {
   const { user, signOut } = useAuth();
   const dispatch          = useAppDispatch();
+  const router            = useRouter();
   const profile           = useAppSelector((s) => s.profile.profile);
   const {
     linkStatus, linkInfo, inviteCode, inviteCodeExpiry,
@@ -167,6 +169,18 @@ export default function Profile() {
         </>
       )}
 
+      {/* Settings */}
+      <SectionHeader title="Settings" />
+      <TouchableOpacity
+        style={[styles.card, styles.settingsBtn]}
+        onPress={() => router.push('/settings')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="settings-outline" size={20} color="#CC6E9A" />
+        <Text style={styles.settingsBtnText}>Language, Units & More</Text>
+        <Ionicons name="chevron-forward" size={16} color="#C8B8A2" />
+      </TouchableOpacity>
+
       {/* Sign out */}
       <Button title="Sign Out" variant="ghost" onPress={signOut} />
       <View style={{ height: 40 }} />
@@ -207,4 +221,6 @@ const styles = StyleSheet.create({
   toggleInfo:    { flex: 1, paddingRight: 16 },
   toggleLabel:   { fontSize: 15, fontWeight: '600', color: '#3D1440' },
   toggleSub:     { fontSize: 12, color: '#A8997F', marginTop: 2 },
+  settingsBtn:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  settingsBtnText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#3D1440' },
 });

@@ -13,9 +13,10 @@ import development from './developmentSlice';
 import mentalHealth from './mentalHealthSlice';
 import planner from './plannerSlice';
 import partner from './partnerSlice';
+import settings from './settingsSlice';
 
 export const store = configureStore({
-  reducer: { auth, chat, tracking, profile, home, development, mentalHealth, planner, partner },
+  reducer: { auth, chat, tracking, profile, home, development, mentalHealth, planner, partner, settings },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });
