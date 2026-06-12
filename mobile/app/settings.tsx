@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { useAppDispatch, useAppSelector } from '../store';
 import { saveSettings } from '../store/settingsSlice';
+import { restorePurchases } from '../store/subscriptionSlice';
 import { SUPPORTED_LANGUAGES, t } from '../lib/i18n';
 import type { UnitSystem, DateFormat } from '../lib/units';
 
@@ -124,6 +125,12 @@ export default function Settings() {
   const [section,    setSection]    = useState<Section>(null);
   const [saving,     setSaving]     = useState(false);
   const [savedMsg,   setSavedMsg]   = useState(false);
+
+  const { tier, restoring } = useAppSelector((s) => s.subscription);
+  const onRestore = useCallback(async () => {
+    // IAP restore stub — real implementation needs react-native-iap
+    Alert.alert('Restore purchases', 'No active subscription found for this account. If you have an active subscription, make sure you are signed in with the same Apple ID or Google account.', [{ text: 'OK' }]);
+  }, []);
 
   const isDirty =
     language   !== saved.language   ||
@@ -294,6 +301,30 @@ export default function Settings() {
           ))}
         </View>
 
+        {/* ── Subscription ── */}
+        <SectionHeader title="Subscription" />
+        <View style={styles.card}>
+          <View style={styles.subRow}>
+            <View style={[styles.subBadge, tier === 'premium' && styles.subBadgePremium]}>
+              <Text style={[styles.subBadgeText, tier === 'premium' && styles.subBadgeTextPremium]}>
+                {tier === 'premium' ? '🌸 Bloom Premium' : '🆓 Free Plan'}
+              </Text>
+            </View>
+          </View>
+          {tier !== 'premium' && (
+            <TouchableOpacity style={styles.upgradeRow} onPress={() => router.push('/features/paywall')}>
+              <Ionicons name="sparkles" size={16} color="#CC6E9A" />
+              <Text style={styles.upgradeRowText}>Upgrade to Bloom Premium</Text>
+              <Ionicons name="chevron-forward" size={14} color="#CC6E9A" />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.aboutRow} onPress={onRestore} disabled={restoring}>
+            <Ionicons name="refresh-outline" size={18} color="#A8997F" />
+            <Text style={styles.aboutLabel}>Restore purchases</Text>
+            {restoring && <ActivityIndicator size="small" color="#CC6E9A" />}
+          </TouchableOpacity>
+        </View>
+
         {/* ── About ── */}
         <SectionHeader title={t('settings.aboutApp')} />
         <View style={styles.card}>
@@ -331,6 +362,13 @@ const styles = StyleSheet.create({
   saveBtn:      { backgroundColor: '#CC6E9A', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 },
   saveBtnText:  { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
   savedMsg:     { color: '#4EA86A', fontWeight: '700', fontSize: 14 },
+  subRow:       { padding: 14, paddingBottom: 8 },
+  subBadge:     { alignSelf: 'flex-start', backgroundColor: '#F3F3F3', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 5 },
+  subBadgePremium: { backgroundColor: '#F9E4F0' },
+  subBadgeText: { fontSize: 13, fontWeight: '700', color: '#8A7359' },
+  subBadgeTextPremium: { color: '#CC6E9A' },
+  upgradeRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, paddingTop: 4 },
+  upgradeRowText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#CC6E9A' },
 
   scroll:       { flex: 1 },
   content:      { padding: 20 },

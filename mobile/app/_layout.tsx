@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import { store, useAppDispatch, useAppSelector } from '../store';
 import { bootstrapAuth } from '../store/authSlice';
 import { loadSettings } from '../store/settingsSlice';
+import { loadSubscription } from '../store/subscriptionSlice';
 import '../lib/i18n';
 
 function AuthGate() {
@@ -22,6 +23,7 @@ function AuthGate() {
   useEffect(() => {
     dispatch(loadSettings());
     dispatch(bootstrapAuth());
+    dispatch(loadSubscription());
   }, [dispatch]);
 
   useEffect(() => {
@@ -75,6 +77,7 @@ function AuthGate() {
         options={{ headerShown: true, title: 'Kick Counter', headerTintColor: '#CC6E9A' }}
       />
       <Stack.Screen name="features/mental-health" options={{ headerShown: false }} />
+      <Stack.Screen name="features/paywall" options={{ headerShown: false, presentation: 'modal' }} />
     </Stack>
   );
 }

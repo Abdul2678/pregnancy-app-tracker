@@ -18,6 +18,10 @@ import {
   streamChatMessage, clearChat, loadChatHistory,
   ChatMessage,
 } from '../../store/chatSlice';
+import {
+  selectCanSendAiMessage, selectAiMessagesRemaining, recordAiMessage,
+} from '../../store/subscriptionSlice';
+import SoftPaywall from '../../components/SoftPaywall';
 import { colors, spacing, radius, shadow } from '../../constants/theme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -165,10 +169,14 @@ export default function ChatScreen() {
   const dispatch = useAppDispatch();
   const { messages, status, streamingContent } = useAppSelector((s) => s.chat);
 
+  const canSend        = useAppSelector(selectCanSendAiMessage);
+  const msgsRemaining  = useAppSelector(selectAiMessagesRemaining);
+
   const [input, setInput] = useState('');
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [disclaimerLoaded, setDisclaimerLoaded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const flatRef = useRef<FlatList>(null);
   const isStreaming = status === 'streaming';
@@ -193,14 +201,18 @@ export default function ChatScreen() {
   const handleSend = useCallback(() => {
     const text = input.trim();
     if (!text || isStreaming) return;
+    if (!canSend) { setShowPaywall(true); return; }
     setInput('');
+    dispatch(recordAiMessage());
     dispatch(streamChatMessage(text) as any);
-  }, [input, isStreaming, dispatch]);
+  }, [input, isStreaming, canSend, dispatch]);
 
   const handleSuggestedPrompt = useCallback((prompt: string) => {
     if (isStreaming) return;
+    if (!canSend) { setShowPaywall(true); return; }
+    dispatch(recordAiMessage());
     dispatch(streamChatMessage(prompt) as any);
-  }, [isStreaming, dispatch]);
+  }, [isStreaming, canSend, dispatch]);
 
   const handleClearChat = useCallback(() => {
     Alert.alert('Clear conversation', 'This will delete all messages. Continue?', [
@@ -322,6 +334,21 @@ export default function ChatScreen() {
           ListFooterComponent={isStreaming && !streamingContent ? <TypingDots /> : null}
         />
 
+        {/* Free tier message counter */}
+        {msgsRemaining !== null && (
+          <TouchableOpacity
+            style={[styles.limitBar, msgsRemaining <= 3 && styles.limitBarWarn]}
+            onPress={() => setShowPaywall(true)}
+          >
+            <Ionicons name="chatbubble-ellipses-outline" size={12} color={msgsRemaining <= 3 ? '#C0524A' : '#8A7359'} />
+            <Text style={[styles.limitText, msgsRemaining <= 3 && styles.limitTextWarn]}>
+              {msgsRemaining === 0
+                ? 'Daily limit reached — tap to upgrade'
+                : `${msgsRemaining} free message${msgsRemaining !== 1 ? 's' : ''} left today · Upgrade`}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Input bar */}
         <View style={styles.inputRow}>
           <TouchableOpacity style={styles.inputIconBtn} onPress={handlePhotoUpload}>
@@ -352,6 +379,12 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <SoftPaywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        reason="ai_limit"
+      />
     </SafeAreaView>
   );
 }
@@ -510,4 +543,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill, paddingVertical: spacing.sm + 4, alignItems: 'center',
   },
   disclaimerBtnText: { color: colors.white, fontWeight: '700', fontSize: 15 },
+
+  limitBar:      { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 6, backgroundColor: '#FFF8E1' },
+  limitBarWarn:  { backgroundColor: '#FFF0F0' },
+  limitText:     { fontSize: 11, color: '#8A7359', fontWeight: '600', flex: 1 },
+  limitTextWarn: { color: '#C0524A' },
 });
