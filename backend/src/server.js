@@ -6,6 +6,7 @@ require('dotenv').config();
 const { createApp } = require('./app');
 const { pool } = require('./db');
 const { scheduleSymptomPatternJob } = require('./jobs/symptomPatternJob');
+const { scheduleNotificationJobs } = require('./jobs/notificationJob');
 
 const PORT = process.env.PORT || 4000;
 
@@ -17,8 +18,10 @@ const server = app.listen(PORT, () => {
 
 // Background cron jobs
 let cronTask = null;
+let notifTask = null;
 if (process.env.ENABLE_CRON !== 'false') {
   cronTask = scheduleSymptomPatternJob();
+  notifTask = scheduleNotificationJobs();
 }
 
 // ── Graceful shutdown ────────────────────────────────────────────────────────
@@ -30,6 +33,7 @@ async function shutdown(signal) {
   console.log(`[server] ${signal} received — shutting down gracefully…`);
 
   if (cronTask && typeof cronTask.stop === 'function') cronTask.stop();
+  if (notifTask && typeof notifTask.stop === 'function') notifTask.stop();
 
   server.close(async () => {
     try {

@@ -20,6 +20,7 @@ const { buildMentalHealthPrompt }  = require('../../prompts/mentalHealthPrompt')
 const { buildWeightGuidancePrompt } = require('../../prompts/weightGuidancePrompt');
 const { buildContractionPrompt } = require('../../prompts/contractionPrompt');
 const { jsonCall }               = require('../../lib/claude');
+const notify                     = require('../../services/notify');
 const { getProfile }             = require('../../services/profiles');
 
 const router = express.Router();
@@ -97,6 +98,17 @@ router.post('/symptoms', authRequired, aiLimiter, validate(symptomSchema), async
       severity: req.body.severity, durationHours: req.body.durationHours,
       bodyLocation: req.body.bodyLocation, notes: req.body.notes,
     });
+    // Follow-up tip notification (fire and forget)
+    const tip = result.triage_result?.selfCareTips?.[0] || result.triage_result?.advice;
+    if (tip) {
+      notify.sendNow(req.user.id, {
+        type: 'symptom_followup',
+        title: `About your ${req.body.symptomName} 💗`,
+        body: String(tip).slice(0, 160),
+        data: { screen: 'track', tab: 'symptoms' },
+        dedupeWindowHours: 4,
+      }).catch(() => {});
+    }
     return created(res, { symptom: result, triage: result.triage_result });
   } catch (err) { return next(err); }
 });
@@ -283,6 +295,15 @@ router.put('/kicks/sessions/:id', authRequired, apiLimiter, validate(addKickSche
       'UPDATE kick_counter_sessions SET kick_times = $1, kick_count = $2, target_met = $3, target_met_at = $4, updated_at = now() WHERE id = $5 RETURNING *',
       [JSON.stringify(kicks), count, targetMet, metAt, req.params.id]
     );
+    if (targetMet && !session.target_met) {
+      notify.sendNow(req.user.id, {
+        type: 'kick_celebration',
+        title: `${session.target_kicks} kicks logged! 🎉`,
+        body: 'Baby is active and you finished your kick count. Lovely work — tap to see your session.',
+        data: { screen: 'kick-counter' },
+        dedupeWindowHours: 2,
+      }).catch(() => {});
+    }
     return ok(res, { session: updated, targetJustMet: targetMet && !session.target_met });
   } catch (err) { return next(err); }
 });
@@ -339,6 +360,17 @@ router.post('/contractions/sessions/:id/events', authRequired, aiLimiter, valida
       'UPDATE contraction_sessions SET total_contractions = $1, avg_duration_sec = $2, avg_interval_sec = $3, min_interval_sec = $4, max_duration_sec = $5, analysis = $6, go_to_hospital = $7, updated_at = now() WHERE id = $8 RETURNING *',
       [all.length, avg(durs), avg(ints), ints.length ? Math.min(...ints) : null, durs.length ? Math.max(...durs) : null, analysis ? JSON.stringify(analysis) : null, goToHospital, req.params.id]
     );
+    // Regular pattern detected: avg interval under 10 min across 5+ contractions
+    const avgInt = avg(ints);
+    if (all.length >= 5 && avgInt && avgInt <= 600 && !sessionRows[0].go_to_hospital) {
+      notify.sendNow(req.user.id, {
+        type: 'contraction_alert',
+        title: 'Your contractions are getting regular',
+        body: `Averaging about ${Math.round(avgInt / 60)} minutes apart. Keep timing them — tap to continue.`,
+        data: { screen: 'contraction-timer', sessionId: req.params.id },
+        dedupeWindowHours: 1,
+      }).catch(() => {});
+    }
     return created(res, { event, session: updatedSession, analysis, goToHospital });
   } catch (err) { return next(err); }
 });

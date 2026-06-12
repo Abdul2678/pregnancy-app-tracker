@@ -301,6 +301,16 @@ export default function Settings() {
           ))}
         </View>
 
+        {/* ── Notifications ── */}
+        <SectionHeader title="Notifications" />
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.aboutRow} onPress={() => router.push('/notification-settings')}>
+            <Ionicons name="notifications-outline" size={18} color="#A8997F" />
+            <Text style={styles.aboutLabel}>Notification preferences</Text>
+            <Ionicons name="chevron-forward" size={16} color="#C8B8A2" />
+          </TouchableOpacity>
+        </View>
+
         {/* ── Subscription ── */}
         <SectionHeader title="Subscription" />
         <View style={styles.card}>

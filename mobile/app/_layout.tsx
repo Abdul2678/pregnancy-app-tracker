@@ -11,6 +11,7 @@ import { store, useAppDispatch, useAppSelector } from '../store';
 import { bootstrapAuth } from '../store/authSlice';
 import { loadSettings } from '../store/settingsSlice';
 import { loadSubscription } from '../store/subscriptionSlice';
+import { registerForPushNotifications, attachNotificationListeners } from '../lib/notifications';
 import '../lib/i18n';
 
 function AuthGate() {
@@ -25,6 +26,14 @@ function AuthGate() {
     dispatch(bootstrapAuth());
     dispatch(loadSubscription());
   }, [dispatch]);
+
+  // Push notifications: register token once authenticated, attach tap handler
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    registerForPushNotifications();
+    const detach = attachNotificationListeners(router);
+    return detach;
+  }, [status, router]);
 
   useEffect(() => {
     if (!bootstrapped) return;
@@ -60,6 +69,7 @@ function AuthGate() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(partner)" />
       <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="notification-settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen
         name="features/birth-plan"
         options={{ headerShown: true, title: 'Birth Plan', headerTintColor: '#CC6E9A' }}

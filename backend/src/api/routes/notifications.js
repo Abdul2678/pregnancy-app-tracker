@@ -14,6 +14,7 @@ const { validate }     = require('../middleware/validate');
 const { authRequired } = require('../middleware/auth');
 const { apiLimiter }   = require('../middleware/rateLimit');
 const { ok, created, notFound } = require('../middleware/respond');
+const notify = require('../../services/notify');
 
 const router = express.Router();
 
@@ -36,6 +37,22 @@ const preferencesSchema = z.object({
   kickReminder:     z.boolean().optional(),
   medicationAlert:  z.boolean().optional(),
   moodCheckin:      z.boolean().optional(),
+});
+
+const settingsSchema = z.object({
+  dailyTip:            z.boolean().optional(),
+  weeklyUpdate:        z.boolean().optional(),
+  appointmentReminder: z.boolean().optional(),
+  moodCheckin:         z.boolean().optional(),
+  kickCelebration:     z.boolean().optional(),
+  contractionAlert:    z.boolean().optional(),
+  weekRollover:        z.boolean().optional(),
+  symptomFollowup:     z.boolean().optional(),
+  feedingReminder:     z.boolean().optional(),
+  postpartumCheckin:   z.boolean().optional(),
+  frequency:           z.enum(['all', 'important', 'minimal']).optional(),
+  quietHoursStart:     z.string().regex(/^\d{2}:\d{2}$/).optional().nullable(),
+  quietHoursEnd:       z.string().regex(/^\d{2}:\d{2}$/).optional().nullable(),
 });
 
 const listSchema = z.object({
@@ -93,6 +110,71 @@ router.put('/preferences', authRequired, apiLimiter, validate(preferencesSchema)
     }
 
     return ok(res, { updated: true });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// GET /settings — granular notification settings
+router.get('/settings', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT notif_settings, quiet_hours_start, quiet_hours_end, notif_pref
+       FROM user_profiles WHERE user_id = $1`,
+      [req.user.id]
+    );
+    const p = rows[0] || {};
+    return ok(res, {
+      settings: { ...notify.DEFAULT_NOTIF_SETTINGS, ...(p.notif_settings || {}) },
+      quietHoursStart: p.quiet_hours_start ? String(p.quiet_hours_start).slice(0, 5) : null,
+      quietHoursEnd:   p.quiet_hours_end   ? String(p.quiet_hours_end).slice(0, 5)   : null,
+      enabled: p.notif_pref !== 'off',
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// PUT /settings — update granular settings + quiet hours
+router.put('/settings', authRequired, apiLimiter, validate(settingsSchema), async (req, res, next) => {
+  try {
+    const { quietHoursStart, quietHoursEnd, ...toggles } = req.body;
+
+    const { rows } = await db.query(
+      `SELECT notif_settings FROM user_profiles WHERE user_id = $1`,
+      [req.user.id]
+    );
+    const merged = { ...notify.DEFAULT_NOTIF_SETTINGS, ...(rows[0]?.notif_settings || {}), ...toggles };
+
+    const sets   = ['notif_settings = $2', 'updated_at = now()'];
+    const params = [req.user.id, JSON.stringify(merged)];
+    let idx = 3;
+    if (quietHoursStart !== undefined) { sets.push(`quiet_hours_start = $${idx++}`); params.push(quietHoursStart); }
+    if (quietHoursEnd   !== undefined) { sets.push(`quiet_hours_end = $${idx++}`);   params.push(quietHoursEnd); }
+
+    await db.query(
+      `INSERT INTO user_profiles (user_id, notif_settings)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id) DO UPDATE SET ${sets.join(', ')}`,
+      params
+    );
+
+    return ok(res, { settings: merged });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// POST /test — send a test notification to this device (debugging)
+router.post('/test', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const id = await notify.sendNow(req.user.id, {
+      type: 'test',
+      title: 'Test from Bloom 🌸',
+      body: 'Notifications are working! You\'ll hear from us like a caring friend — never spam.',
+      data: { screen: 'home' },
+    });
+    return ok(res, { sent: Boolean(id) });
   } catch (err) {
     return next(err);
   }
