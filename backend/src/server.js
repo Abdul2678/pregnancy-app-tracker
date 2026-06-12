@@ -7,6 +7,7 @@ const { createApp } = require('./app');
 const { pool } = require('./db');
 const { scheduleSymptomPatternJob } = require('./jobs/symptomPatternJob');
 const { scheduleNotificationJobs } = require('./jobs/notificationJob');
+const { scheduleDataWipeJob } = require('./jobs/dataWipeJob');
 
 const PORT = process.env.PORT || 4000;
 
@@ -19,9 +20,11 @@ const server = app.listen(PORT, () => {
 // Background cron jobs
 let cronTask = null;
 let notifTask = null;
+let wipeTask = null;
 if (process.env.ENABLE_CRON !== 'false') {
   cronTask = scheduleSymptomPatternJob();
   notifTask = scheduleNotificationJobs();
+  wipeTask = scheduleDataWipeJob();
 }
 
 // ── Graceful shutdown ────────────────────────────────────────────────────────
@@ -34,6 +37,7 @@ async function shutdown(signal) {
 
   if (cronTask && typeof cronTask.stop === 'function') cronTask.stop();
   if (notifTask && typeof notifTask.stop === 'function') notifTask.stop();
+  if (wipeTask && typeof wipeTask.stop === 'function') wipeTask.stop();
 
   server.close(async () => {
     try {

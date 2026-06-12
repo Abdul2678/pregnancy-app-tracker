@@ -19,6 +19,7 @@ const ai            = require('./ai');
 const chat          = require('./chat');
 const emergency     = require('./emergency');
 const subscription  = require('./subscription');
+const privacy       = require('./privacy');
 
 const router = express.Router();
 
@@ -43,5 +44,6 @@ router.use('/ai',            ai);
 router.use('/chat',          chat);   // legacy alias → /ai/chat
 router.use('/emergency',     emergency);
 router.use('/subscription',  subscription);
+router.use('/privacy',       privacy);
 
 module.exports = router;

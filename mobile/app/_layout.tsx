@@ -1,7 +1,8 @@
 // app/_layout.tsx
 // Root layout: Redux Provider + auth + onboarding guard + navigation.
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, AppState } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { Provider } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,7 +13,62 @@ import { bootstrapAuth } from '../store/authSlice';
 import { loadSettings } from '../store/settingsSlice';
 import { loadSubscription } from '../store/subscriptionSlice';
 import { registerForPushNotifications, attachNotificationListeners } from '../lib/notifications';
+import { isBiometricLockEnabled, authenticate } from '../lib/biometrics';
 import '../lib/i18n';
+
+// ── Biometric lock gate ───────────────────────────────────────────────────────
+// Locks on cold start and whenever the app returns from background.
+
+function BiometricGate({ children }: { children: React.ReactNode }) {
+  const [locked, setLocked] = useState<boolean | null>(null); // null = checking
+  const appStateRef = useRef(AppState.currentState);
+
+  const tryUnlock = async () => {
+    const success = await authenticate();
+    if (success) setLocked(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      const enabled = await isBiometricLockEnabled();
+      if (!enabled) { setLocked(false); return; }
+      setLocked(true);
+      tryUnlock();
+    })();
+
+    const sub = AppState.addEventListener('change', async (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (prev.match(/background/) && next === 'active') {
+        const enabled = await isBiometricLockEnabled();
+        if (enabled) { setLocked(true); tryUnlock(); }
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
+  if (locked === false) return <>{children}</>;
+
+  return (
+    <View style={lockStyles.screen}>
+      <Text style={lockStyles.emoji}>🔐</Text>
+      <Text style={lockStyles.title}>Bloom is locked</Text>
+      <Text style={lockStyles.sub}>Your health data is protected.</Text>
+      <TouchableOpacity style={lockStyles.btn} onPress={tryUnlock} activeOpacity={0.85}>
+        <Text style={lockStyles.btnText}>Unlock</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const lockStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#FDF0F8', alignItems: 'center', justifyContent: 'center', padding: 32 },
+  emoji:  { fontSize: 48, marginBottom: 16 },
+  title:  { fontSize: 22, fontWeight: '900', color: '#3D1440', marginBottom: 6 },
+  sub:    { fontSize: 14, color: '#8A7359', marginBottom: 28 },
+  btn:    { backgroundColor: '#CC6E9A', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 48 },
+  btnText: { color: '#FFFFFF', fontWeight: '800', fontSize: 15 },
+});
 
 function AuthGate() {
   const dispatch  = useAppDispatch();
@@ -70,6 +126,8 @@ function AuthGate() {
       <Stack.Screen name="(partner)" />
       <Stack.Screen name="settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen name="notification-settings" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="privacy" options={{ headerShown: false, animation: 'slide_from_right' }} />
+      <Stack.Screen name="privacy-policy" options={{ headerShown: false, animation: 'slide_from_right' }} />
       <Stack.Screen
         name="features/birth-plan"
         options={{ headerShown: true, title: 'Birth Plan', headerTintColor: '#CC6E9A' }}
@@ -97,7 +155,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <StatusBar style="dark" />
-        <AuthGate />
+        <BiometricGate>
+          <AuthGate />
+        </BiometricGate>
       </Provider>
     </GestureHandlerRootView>
   );

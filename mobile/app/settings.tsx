@@ -301,6 +301,16 @@ export default function Settings() {
           ))}
         </View>
 
+        {/* ── Privacy (prominent, first) ── */}
+        <SectionHeader title="Privacy" />
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.aboutRow} onPress={() => router.push('/privacy')}>
+            <Ionicons name="lock-closed-outline" size={18} color="#CC6E9A" />
+            <Text style={[styles.aboutLabel, { fontWeight: '700' }]}>Your data belongs to you</Text>
+            <Ionicons name="chevron-forward" size={16} color="#C8B8A2" />
+          </TouchableOpacity>
+        </View>
+
         {/* ── Notifications ── */}
         <SectionHeader title="Notifications" />
         <View style={styles.card}>
@@ -342,7 +352,12 @@ export default function Settings() {
             { label: t('settings.privacyPolicy'),  icon: 'shield-checkmark-outline' as const },
             { label: t('settings.termsOfService'), icon: 'document-text-outline' as const },
           ].map(({ label, icon }) => (
-            <TouchableOpacity key={label} style={styles.aboutRow} activeOpacity={0.7}>
+            <TouchableOpacity
+              key={label}
+              style={styles.aboutRow}
+              activeOpacity={0.7}
+              onPress={() => { if (icon === 'shield-checkmark-outline') router.push('/privacy-policy'); }}
+            >
               <Ionicons name={icon} size={18} color="#A8997F" />
               <Text style={styles.aboutLabel}>{label}</Text>
               <Ionicons name="chevron-forward" size={16} color="#C8B8A2" />

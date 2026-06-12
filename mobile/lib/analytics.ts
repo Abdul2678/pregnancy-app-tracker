@@ -8,8 +8,23 @@ import * as SecureStore from 'expo-secure-store';
 const POSTHOG_HOST = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? '';
 const POSTHOG_KEY  = process.env.EXPO_PUBLIC_POSTHOG_KEY  ?? '';
 const ANON_ID_KEY  = 'bloom_anon_id';
+const OPT_OUT_KEY  = 'bloom_analytics_opt_out';
 
 let anonId: string | null = null;
+let optedOut: boolean | null = null;
+
+/** Privacy: user can opt out of even anonymised analytics. */
+export async function setAnalyticsOptOut(value: boolean): Promise<void> {
+  optedOut = value;
+  await SecureStore.setItemAsync(OPT_OUT_KEY, value ? '1' : '0');
+}
+
+async function isOptedOut(): Promise<boolean> {
+  if (optedOut !== null) return optedOut;
+  const stored = await SecureStore.getItemAsync(OPT_OUT_KEY);
+  optedOut = stored === '1';
+  return optedOut;
+}
 
 async function getAnonId(): Promise<string> {
   if (anonId) return anonId;
@@ -27,6 +42,7 @@ async function getAnonId(): Promise<string> {
 
 async function send(event: string, properties: Record<string, unknown> = {}): Promise<void> {
   if (!POSTHOG_HOST || !POSTHOG_KEY) return; // analytics disabled — no-op
+  if (await isOptedOut()) return;            // user opted out — respect it
   try {
     const distinctId = await getAnonId();
     await fetch(`${POSTHOG_HOST}/capture/`, {
