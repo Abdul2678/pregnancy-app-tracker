@@ -39,6 +39,8 @@ import {
   UpcomingSkeleton,
   CommunitySkeleton,
 } from '../../components/home/Skeleton';
+import { PostpartumHome } from '../../components/postpartum/PostpartumHome';
+import { loadPostpartumProfile } from '../../store/postpartumSlice';
 
 // ─── Baby size lookup (weeks 4-40) ────────────────────────────────────────────
 
@@ -345,6 +347,7 @@ export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const router   = useRouter();
 
+  const postpartum = useAppSelector((s) => s.postpartum);
   const profile  = useAppSelector((s) => s.profile.profile);
   const dailyTip = useAppSelector((s) => s.profile.dailyTip);
   const { weekContent, appointments, communityPost, unreadNotifCount, loading, refreshing } =
@@ -367,15 +370,25 @@ export default function HomeScreen() {
   const didYouKnow    = weekContent?.did_you_know ?? weekContent?.didYouKnow ?? '';
 
   useEffect(() => {
+    dispatch(loadPostpartumProfile());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (postpartum.active) return;
     dispatch(fetchWeekContent(currentWeek));
     dispatch(fetchUpcomingAppointments());
     dispatch(fetchCommunityHighlight());
     dispatch(fetchUnreadCount());
-  }, [dispatch, currentWeek]);
+  }, [dispatch, currentWeek, postpartum.active]);
 
   const onRefresh = useCallback(() => {
     dispatch(refreshHome(currentWeek));
   }, [dispatch, currentWeek]);
+
+  // Postpartum mode replaces the pregnancy home entirely
+  if (postpartum.active && postpartum.profile) {
+    return <PostpartumHome />;
+  }
 
   return (
     <SafeAreaView style={s.safe}>
@@ -409,6 +422,31 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.rose} colors={[colors.rose]} />
         }
       >
+        {/* ── Birth logging banner (week 41+ or anytime via card) ─── */}
+        {currentWeek >= 37 && (
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row', alignItems: 'center', gap: 12,
+              backgroundColor: currentWeek >= 41 ? colors.rose : '#FFFDF9',
+              borderRadius: 16, padding: 16, marginBottom: 14,
+              borderWidth: currentWeek >= 41 ? 0 : 1.5, borderColor: colors.rose,
+            }}
+            activeOpacity={0.85}
+            onPress={() => router.push('/features/birth-log' as any)}
+          >
+            <Text style={{ fontSize: 26 }}>👶</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: currentWeek >= 41 ? '#FFFFFF' : colors.textDeep }}>
+                {currentWeek >= 41 ? 'Has your baby arrived?' : 'Baby arrived early?'}
+              </Text>
+              <Text style={{ fontSize: 12, color: currentWeek >= 41 ? 'rgba(255,255,255,0.85)' : '#8A7359', marginTop: 2 }}>
+                Log your birth to switch to postpartum mode
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={currentWeek >= 41 ? '#FFFFFF' : colors.rose} />
+          </TouchableOpacity>
+        )}
+
         {/* ── Hero card ───────────────────────────────────────────── */}
         {loading.weekContent && !weekContent ? <HeroSkeleton /> : (
           <View style={s.heroCard}>

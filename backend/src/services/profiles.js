@@ -28,7 +28,7 @@ function rowToProfile(row) {
     recentSymptoms: row.recent_symptoms || [],
     notifPref: row.notif_pref,
     partnerMode: row.partner_mode,
-    postpartum: row.postpartum,
+    postpartum: row.postpartum_mode,
     babyAgeWeeks: row.baby_age_weeks,
     firstTipCategory: (row.feature_priorities && row.feature_priorities[0]) || 'general',
     onboardingMessage: row.onboarding_message,

@@ -184,4 +184,68 @@ router.get('/ppd-status', authRequired, apiLimiter, async (req, res, next) => {
   } catch (err) { return next(err); }
 });
 
+// POST /six-week-summary — AI-generated health summary for the GP appointment
+router.post('/six-week-summary', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const pp = await getPP(req.user.id);
+    if (!pp) return notFound(res, 'Postpartum profile');
+
+    const profile = await getProfile(req.user.id);
+    const ageDays = babyAgeDays(pp.birth_date);
+
+    const [moodRows, logStats] = await Promise.all([
+      db.query(
+        `SELECT mood_score, logged_at FROM mood_logs
+         WHERE user_id = $1 AND logged_at >= $2 ORDER BY logged_at DESC LIMIT 42`,
+        [req.user.id, pp.birth_date]
+      ),
+      db.query(
+        `SELECT
+           COUNT(*) FILTER (WHERE log_type = 'feeding') AS feed_count,
+           COUNT(*) FILTER (WHERE log_type = 'sleep')   AS sleep_count,
+           COUNT(*) FILTER (WHERE log_type = 'diaper')  AS diaper_count,
+           AVG(feeding_duration_min) FILTER (WHERE log_type = 'feeding') AS avg_feed_min,
+           AVG(sleep_duration_min)   FILTER (WHERE log_type = 'sleep')   AS avg_sleep_min
+         FROM newborn_logs WHERE user_id = $1`,
+        [req.user.id]
+      ),
+    ]);
+
+    const moods = moodRows.rows;
+    const avgMood = moods.length
+      ? (moods.reduce((sum, m) => sum + (m.mood_score || 3), 0) / moods.length).toFixed(1)
+      : 'no data';
+    const stats = logStats.rows[0];
+
+    const { callClaude } = require('../../services/claude');
+    const { buildPostpartumSystemPrompt } = require('../../prompts/systemPrompt');
+
+    const summary = await callClaude({
+      system: buildPostpartumSystemPrompt({
+        babyAgeWeeks: Math.floor(ageDays / 7),
+        language: (profile && profile.language) || 'English',
+        country: (profile && profile.country) || 'unknown',
+      }),
+      maxTokens: 1500,
+      messages: [{
+        role: 'user',
+        content: `Generate a concise 6-week postpartum check-in summary I can bring to my doctor's appointment. Format with clear headings. Include only what is in this data — do not invent details.
+
+Birth: ${pp.birth_date}, type: ${pp.birth_type || 'not recorded'}
+Baby: ${pp.baby_name || 'baby'}, ${ageDays} days old
+Birth weight: ${pp.birth_weight_grams ? pp.birth_weight_grams + 'g' : 'not recorded'}
+Feeding method: ${pp.feeding_method}
+Recovery flags: c-section incision ok: ${pp.c_section_incision_ok ?? 'not recorded'}, perineal healing ok: ${pp.perineal_healing_ok ?? 'not recorded'}
+Mood check-ins since birth: ${moods.length}, average score (1-5): ${avgMood}
+PPD screening: last score ${pp.ppd_last_score ?? 'not taken'}, high risk flag: ${pp.ppd_high_risk ?? false}
+Newborn logs: ${stats.feed_count} feeds (avg ${Math.round(stats.avg_feed_min || 0)} min), ${stats.sleep_count} sleep entries (avg ${Math.round(stats.avg_sleep_min || 0)} min), ${stats.diaper_count} diapers
+
+End with 2-3 suggested questions for the doctor based on the data, plus a gentle reminder that the 6-week check should include a mental health conversation.`,
+      }],
+    });
+
+    return ok(res, { summary, babyAgeDays: ageDays });
+  } catch (err) { return next(err); }
+});
+
 module.exports = router;
