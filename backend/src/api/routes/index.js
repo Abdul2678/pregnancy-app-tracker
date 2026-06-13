@@ -23,9 +23,9 @@ const privacy       = require('./privacy');
 
 const router = express.Router();
 
-router.get('/health', (req, res) =>
-  res.json({ success: true, data: { status: 'ok', service: 'bloom-api', version: '1.0.0' } })
-);
+// /api/health is mounted directly in app.js (before rate limiter)
+// This stub handles the case where someone hits /api/health through the router
+router.get('/health', (req, res) => res.redirect('/api/health'));
 
 router.use('/auth',          auth);
 router.use('/user',          user);
