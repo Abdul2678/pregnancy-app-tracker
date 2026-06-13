@@ -1,30 +1,91 @@
 {
   "expo": {
-    "name": "Bloom",
-    "slug": "bloom",
+    "name": "Bloom — Pregnancy Tracker",
+    "slug": "bloom-pregnancy-tracker",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "scheme": "bloom",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+
+    "icon": "./assets/icon.png",
+
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F4F1EA"
+      "backgroundColor": "#FDF0F8"
     },
+
+    "assetBundlePatterns": ["**/*"],
+
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bloom.pregnancytracker"
-    },
-    "android": {
-      "package": "com.bloom.pregnancytracker",
-      "adaptiveIcon": {
-        "backgroundColor": "#F4F1EA"
+      "bundleIdentifier": "com.bloompregnancy.app",
+      "buildNumber": "1",
+      "icon": "./assets/icon.png",
+      "requireFullScreen": false,
+      "usesAppleSignIn": true,
+      "entitlements": {
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.access": []
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Bloom uses your camera to let you add a profile photo and scan documents for your birth plan.",
+        "NSPhotoLibraryUsageDescription": "Bloom accesses your photo library so you can choose a profile picture or add photos to your pregnancy journal.",
+        "NSPhotoLibraryAddUsageDescription": "Bloom saves photos to your library when you export your birth plan or pregnancy summary.",
+        "NSHealthShareUsageDescription": "Bloom reads health data such as weight and heart rate to enrich your pregnancy tracking.",
+        "NSHealthUpdateUsageDescription": "Bloom writes pregnancy milestones and weight logs to Apple Health so all your health data stays in sync.",
+        "NSFaceIDUsageDescription": "Bloom uses Face ID to keep your pregnancy data private and secure.",
+        "UIBackgroundModes": ["remote-notification"],
+        "NSLocationWhenInUseUsageDescription": "Bloom uses your location to find nearby hospitals and healthcare providers. You can use Bloom without granting location access.",
+        "CFBundleAllowMixedLocalizations": true
       }
     },
+
+    "android": {
+      "package": "com.bloompregnancy.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FDF0F8"
+      },
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "bloompregnancy.app",
+              "pathPrefix": "/app"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/favicon.png"
     },
+
     "plugins": [
       "expo-router",
       "expo-secure-store",
@@ -32,15 +93,47 @@
       [
         "expo-notifications",
         {
-          "color": "#C97B63"
+          "icon": "./assets/notification-icon.png",
+          "color": "#CC6E9A",
+          "defaultChannel": "bloom-reminders"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Bloom uses your camera to let you add a profile photo and scan documents for your birth plan."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Bloom accesses your photo library so you can choose a profile picture or add photos to your pregnancy journal."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Bloom uses Face ID to keep your pregnancy data private and secure."
         }
       ]
     ],
+
     "experiments": {
       "typedRoutes": true
     },
+
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/YOUR_EAS_PROJECT_ID"
+    },
+
     "extra": {
-      "apiBaseUrl": "http://localhost:4000/api"
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      },
+      "apiBaseUrl": "https://api.bloompregnancy.app/api"
     }
   }
 }
