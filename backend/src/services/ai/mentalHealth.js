@@ -35,7 +35,7 @@ const CRISIS_PATTERNS = [
   /\bend\s+(my|it\s+all)/i,
   /\bwish\s+I\s+(was|were)\s+dead/i,
   /\bno\s+reason\s+to\s+live/i,
-  /\babuse/i,
+  /\babus(e|ed|ive|ing)\b/i,
   /\bdomestic\s+violence/i,
   /\bhe\s+(hit|hurt|beat)\s+me/i,
 ];
@@ -101,10 +101,11 @@ function analyzeMoodPattern(recentMoods) {
   if (avg <= 2) return 'consistently_low';
   if (avg >= 4) return 'consistently_positive';
 
-  const first  = scores.slice(0, 3).reduce((s, v) => s + v, 0) / 3;
-  const last   = scores.slice(-3).reduce((s, v) => s + v, 0) / 3;
-  if (last - first > 1)  return 'improving';
-  if (first - last > 1)  return 'declining';
+  // recentMoods is latest-first: slice(0,3) = most recent, slice(-3) = oldest
+  const recent = scores.slice(0, 3).reduce((s, v) => s + v, 0) / 3;
+  const older  = scores.slice(-3).reduce((s, v) => s + v, 0) / 3;
+  if (recent - older > 1) return 'improving';
+  if (older - recent > 1) return 'declining';
   return 'mixed';
 }
 

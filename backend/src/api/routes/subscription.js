@@ -4,14 +4,14 @@
 
 const express = require('express');
 const router  = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authRequired } = require('../middleware/auth');
 const db = require('../../db');
 
 // Auto-migration on boot
 async function ensureSubscriptionsTable() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS user_subscriptions (
-      user_id     INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      user_id     UUID    PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       tier        VARCHAR(20)  NOT NULL DEFAULT 'free',
       period      VARCHAR(20),
       expires_at  TIMESTAMPTZ,
@@ -24,7 +24,7 @@ async function ensureSubscriptionsTable() {
 ensureSubscriptionsTable().catch(console.error);
 
 // ── GET /subscription/status ──────────────────────────────────────────────────
-router.get('/status', authenticateToken, async (req, res) => {
+router.get('/status', authRequired, async (req, res) => {
   try {
     const { rows } = await db.query(
       'SELECT tier, period, expires_at FROM user_subscriptions WHERE user_id = $1',
@@ -53,7 +53,7 @@ router.get('/status', authenticateToken, async (req, res) => {
 });
 
 // ── POST /subscription/validate ───────────────────────────────────────────────
-router.post('/validate', authenticateToken, async (req, res) => {
+router.post('/validate', authRequired, async (req, res) => {
   const { receipt, platform, productId } = req.body;
   if (!receipt || !platform || !productId) {
     return res.status(400).json({ error: 'receipt, platform, productId required' });
@@ -94,7 +94,7 @@ router.post('/validate', authenticateToken, async (req, res) => {
 });
 
 // ── POST /subscription/restore ────────────────────────────────────────────────
-router.post('/restore', authenticateToken, async (req, res) => {
+router.post('/restore', authRequired, async (req, res) => {
   const { receipt, platform } = req.body;
   if (!receipt || !platform) {
     return res.status(400).json({ error: 'receipt and platform required' });
