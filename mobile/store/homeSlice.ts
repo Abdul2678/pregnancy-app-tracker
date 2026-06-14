@@ -82,7 +82,7 @@ export const fetchUpcomingAppointments = createAsyncThunk(
 export const fetchCommunityHighlight = createAsyncThunk(
   'home/community',
   async () => {
-    const { data } = await api.get('/community?limit=1&sortBy=recent');
+    const { data } = await api.get('/community/posts?limit=1&sortBy=recent');
     const payload = data?.data ?? data;
     const posts = payload?.posts ?? payload;
     return (Array.isArray(posts) && posts.length > 0 ? posts[0] : null) as CommunityPost | null;

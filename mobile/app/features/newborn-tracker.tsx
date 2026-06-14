@@ -205,7 +205,7 @@ export default function NewbornTracker() {
   const router   = useRouter();
   const dispatch = useAppDispatch();
   const params   = useLocalSearchParams<{ tab?: string }>();
-  const { logs, todaySummary, logStatus, profile } = useAppSelector((s) => s.postpartum);
+  const { logs, todaySummary, logStatus, profile, active } = useAppSelector((s) => s.postpartum);
 
   const [tab, setTab] = useState<Tab>(
     (['feeding', 'sleep', 'diaper'].includes(params.tab ?? '') ? params.tab : 'feeding') as Tab
@@ -213,9 +213,10 @@ export default function NewbornTracker() {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
+    if (!active) return;
     dispatch(loadNewbornLogs());
     dispatch(loadTodaySummary());
-  }, [dispatch]);
+  }, [dispatch, active]);
 
   const onSave = async (payload: Record<string, any>) => {
     const result = await dispatch(logNewborn(payload));
@@ -224,6 +225,23 @@ export default function NewbornTracker() {
       dispatch(loadTodaySummary());
     }
   };
+
+  if (!active) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, backgroundColor: '#FDF8F2' }}>
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>🍼</Text>
+        <Text style={{ fontSize: 18, fontWeight: '700', color: '#4A3728', textAlign: 'center', marginBottom: 8 }}>
+          Newborn Tracker
+        </Text>
+        <Text style={{ fontSize: 14, color: '#A8997F', textAlign: 'center', lineHeight: 22 }}>
+          This section unlocks after you activate postpartum mode. Complete your birth details on the home screen to get started.
+        </Text>
+        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 24, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#CC6E9A', borderRadius: 24 }}>
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const tabLogs = useMemo(
     () => logs.filter((l) => l.log_type === tab).slice(0, 20),

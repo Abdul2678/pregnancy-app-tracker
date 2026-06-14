@@ -29,6 +29,7 @@ import {
   fetchUnreadCount,
   refreshHome,
 } from '../../store/homeSlice';
+import { fetchDailyTip } from '../../store/profileSlice';
 import api from '../../lib/api';
 import { colors, spacing, radius, shadow } from '../../constants/theme';
 import {
@@ -379,6 +380,7 @@ export default function HomeScreen() {
     dispatch(fetchUpcomingAppointments());
     dispatch(fetchCommunityHighlight());
     dispatch(fetchUnreadCount());
+    dispatch(fetchDailyTip());
   }, [dispatch, currentWeek, postpartum.active]);
 
   const onRefresh = useCallback(() => {

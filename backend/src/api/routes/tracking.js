@@ -109,7 +109,7 @@ router.post('/symptoms', authRequired, aiLimiter, validate(symptomSchema), async
         dedupeWindowHours: 4,
       }).catch(() => {});
     }
-    return created(res, { symptom: result, triage: result.triage_result });
+    return created(res, { log: result, triage: result.triage_result });
   } catch (err) { return next(err); }
 });
 
@@ -145,6 +145,11 @@ router.post('/mood', authRequired, aiLimiter, validate(moodSchema), async (req, 
       note: req.body.note, recentMoods: recentRows, isPostpartum: !!(profile && profile.postpartum),
     });
     const analysis = await jsonCall({ system, userPrompt, maxTokens: 600 });
+    // Count consecutive low-mood days (score ≤ 2) from recent history
+    const consecutiveLowDays = recentRows.reduce((count, row) => {
+      if (count === null) return null; // streak broken
+      return (row.mood_score !== null && row.mood_score <= 2) ? count + 1 : null;
+    }, req.body.moodScore <= 2 ? 0 : null) ?? 0;
     const { rows: [entry] } = await db.query(
       'INSERT INTO mood_logs (user_id, pregnancy_id, mood, mood_score, emotions, note, pregnancy_week, is_postpartum, risk_level, analysis, ppd_flag) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
       [
@@ -154,7 +159,11 @@ router.post('/mood', authRequired, aiLimiter, validate(moodSchema), async (req, 
         analysis.riskLevel || 'low', JSON.stringify(analysis), analysis.ppdFlag || false,
       ]
     );
-    return created(res, { mood: entry, analysis });
+    return created(res, {
+      log: entry,
+      insight: analysis.insight || analysis.response || analysis.advice || null,
+      consecutiveLowDays,
+    });
   } catch (err) { return next(err); }
 });
 
@@ -254,7 +263,7 @@ router.post('/weight', authRequired, aiLimiter, validate(weightSchema), async (r
       'INSERT INTO weight_logs (user_id, pregnancy_id, weight_kg, pregnancy_week, bmi_at_log, guidance, notes) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
       [req.user.id, preg && preg.id, req.body.weightKg, preg && preg.current_week, bmiAtLog, JSON.stringify(guidance), req.body.notes || null]
     );
-    return created(res, { weight: entry, guidance });
+    return created(res, { log: entry, guidance });
   } catch (err) { return next(err); }
 });
 
@@ -308,14 +317,59 @@ router.put('/kicks/sessions/:id', authRequired, apiLimiter, validate(addKickSche
   } catch (err) { return next(err); }
 });
 
-router.get('/kicks', authRequired, apiLimiter, validate(pagination, 'query'), async (req, res, next) => {
+const kickListHandler = async (req, res, next) => {
   try {
-    const { limit, offset } = req.query;
+    const limit  = Math.min(Number(req.query.limit)  || 20, 100);
+    const offset = Number(req.query.offset) || 0;
     const { rows } = await db.query(
       'SELECT id, pregnancy_week, started_at, ended_at, kick_count, target_kicks, target_met, duration_minutes, position FROM kick_counter_sessions WHERE user_id = $1 ORDER BY started_at DESC LIMIT $2 OFFSET $3',
       [req.user.id, limit, offset]
     );
     return ok(res, { sessions: rows, limit, offset });
+  } catch (err) { return next(err); }
+};
+router.get('/kicks',         authRequired, apiLimiter, kickListHandler);
+router.get('/kicks/history', authRequired, apiLimiter, kickListHandler); // mobile alias
+
+// Mobile saves full sessions in one shot (vs. the incremental PUT approach)
+router.post('/kicks/session', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const preg = await currentPregnancy(req.user.id);
+    const b = req.body;
+    const kickTimes = (b.kicks || []).map((k) => k.timestamp ?? k);
+    const durationMin = b.durationMin ?? (b.startTime && b.endTime
+      ? Math.round((new Date(b.endTime) - new Date(b.startTime)) / 60000)
+      : null);
+    const { rows: [session] } = await db.query(
+      `INSERT INTO kick_counter_sessions
+         (user_id, pregnancy_id, pregnancy_week, target_kicks, kick_count,
+          kick_times, target_met, target_met_at, duration_minutes, started_at, ended_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING *`,
+      [
+        req.user.id,
+        preg?.id ?? null,
+        preg?.current_week ?? null,
+        b.targetKicks ?? 10,
+        b.kickCount ?? kickTimes.length,
+        JSON.stringify(kickTimes),
+        b.goalReached ?? false,
+        b.goalReached ? (b.endTime ?? new Date().toISOString()) : null,
+        durationMin,
+        b.startTime ?? new Date().toISOString(),
+        b.endTime   ?? new Date().toISOString(),
+      ]
+    );
+    if (b.goalReached) {
+      notify.sendNow(req.user.id, {
+        type: 'kick_celebration',
+        title: `${b.kickCount ?? 10} kicks logged! 🎉`,
+        body: 'Baby is active and you finished your kick count. Lovely work.',
+        data: { screen: 'kick-counter' },
+        dedupeWindowHours: 2,
+      }).catch(() => {});
+    }
+    return created(res, { session });
   } catch (err) { return next(err); }
 });
 
@@ -383,11 +437,149 @@ router.put('/contractions/sessions/:id/close', authRequired, apiLimiter, async (
   } catch (err) { return next(err); }
 });
 
+// Mobile: analyze a set of contractions without creating a session
+router.post('/contractions', authRequired, aiLimiter, async (req, res, next) => {
+  try {
+    const { contractions = [], sessionDurationMin, currentWeek } = req.body;
+    if (!Array.isArray(contractions) || contractions.length === 0) {
+      return res.status(400).json({ success: false, error: 'contractions array is required' });
+    }
+    const durs = contractions.map((c) => c.durationSec).filter(Boolean).map(Number);
+    const ints = contractions.map((c) => c.intervalSec).filter(Boolean).map(Number);
+    const avg  = (arr) => arr.length ? arr.reduce((a, v) => a + v, 0) / arr.length : null;
+    const profile = await getProfile(req.user.id);
+    const { system, user: userPrompt } = buildContractionPrompt({
+      user: { ...(profile || {}), pregnancyWeek: currentWeek ?? profile?.current_week },
+      contractions,
+      totalCount: contractions.length,
+      avgDurationSec: avg(durs),
+      avgIntervalSec: avg(ints),
+    });
+    const analysis = await jsonCall({ system, userPrompt, maxTokens: 600 });
+    return ok(res, {
+      pattern:        analysis.pattern        ?? '',
+      assessment:     analysis.assessment     ?? '',
+      recommendation: analysis.recommendation ?? '',
+      urgencyLevel:   analysis.urgencyLevel   ?? 'low',
+      goToHospital:   analysis.goToHospital   ?? false,
+    });
+  } catch (err) { return next(err); }
+});
+
+// Mobile: save full contraction session in one shot (vs incremental event approach)
+router.post('/contractions/save', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const preg = await currentPregnancy(req.user.id);
+    const b    = req.body;
+    const { rows: [session] } = await db.query(
+      `INSERT INTO contraction_sessions
+         (user_id, pregnancy_id, pregnancy_week, total_contractions,
+          avg_duration_sec, avg_interval_sec, analysis, go_to_hospital,
+          started_at, ended_at, is_active, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,FALSE,$11)
+       RETURNING *`,
+      [
+        req.user.id,
+        preg?.id    ?? null,
+        preg?.current_week ?? null,
+        (b.contractions ?? []).length,
+        (b.contractions ?? []).map((c) => c.durationSec).filter(Boolean).reduce((a, v, _, arr) => a + v / arr.length, 0) || null,
+        (b.contractions ?? []).map((c) => c.intervalSec).filter(Boolean).reduce((a, v, _, arr) => a + v / arr.length, 0) || null,
+        b.aiAnalysis ? JSON.stringify(b.aiAnalysis) : null,
+        b.aiAnalysis?.goToHospital ?? false,
+        b.sessionStart ?? new Date().toISOString(),
+        b.contractions?.length
+          ? new Date(new Date(b.contractions[b.contractions.length - 1].startTime).getTime() + (b.contractions[b.contractions.length - 1].durationSec ?? 0) * 1000).toISOString()
+          : new Date().toISOString(),
+        b.notes ?? null,
+      ]
+    );
+    if (b.rule511Met || b.aiAnalysis?.goToHospital) {
+      notify.sendNow(req.user.id, {
+        type: 'contraction_alert',
+        title: 'Contraction pattern alert',
+        body:  b.aiAnalysis?.goToHospital
+          ? 'Based on your contraction pattern, consider going to hospital now.'
+          : 'Your contractions are meeting the 5-1-1 rule. Time to call your provider.',
+        data: { screen: 'contraction-timer' },
+        dedupeWindowHours: 2,
+      }).catch(() => {});
+    }
+    return created(res, { session });
+  } catch (err) { return next(err); }
+});
+
 router.get('/contractions', authRequired, apiLimiter, validate(pagination, 'query'), async (req, res, next) => {
   try {
     const { limit, offset } = req.query;
     const { rows } = await db.query('SELECT id, pregnancy_week, started_at, ended_at, total_contractions, avg_duration_sec, avg_interval_sec, min_interval_sec, go_to_hospital, is_active, analysis FROM contraction_sessions WHERE user_id = $1 ORDER BY started_at DESC LIMIT $2 OFFSET $3', [req.user.id, limit, offset]);
     return ok(res, { sessions: rows, limit, offset });
+  } catch (err) { return next(err); }
+});
+
+// TODAY — all logs for the current calendar day (UTC)
+router.get('/today', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const today = "DATE(logged_at AT TIME ZONE 'UTC') = CURRENT_DATE";
+    const [s, m, w, k] = await Promise.all([
+      db.query(`SELECT id, symptom_name, severity, triage_result, logged_at FROM symptom_logs WHERE user_id = $1 AND ${today} ORDER BY logged_at DESC`, [req.user.id]),
+      db.query(`SELECT id, mood, mood_score, risk_level, logged_at FROM mood_logs WHERE user_id = $1 AND ${today} ORDER BY logged_at DESC`, [req.user.id]),
+      db.query(`SELECT id, weight_kg, pregnancy_week, logged_at FROM weight_logs WHERE user_id = $1 AND ${today} ORDER BY logged_at DESC`, [req.user.id]),
+      db.query(`SELECT id, kick_count, target_met, started_at FROM kick_counter_sessions WHERE user_id = $1 AND ${today} ORDER BY started_at DESC`, [req.user.id]),
+    ]);
+    return ok(res, {
+      symptoms: s.rows,
+      moods: m.rows,
+      weights: w.rows,
+      kicks: k.rows,
+    });
+  } catch (err) { return next(err); }
+});
+
+// HISTORY DOTS — one entry per day for calendar/streak display (last N days)
+router.get('/history', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const days = Math.min(Number(req.query.days) || 30, 90);
+    const { rows } = await db.query(
+      `SELECT
+         DATE(logged_at AT TIME ZONE 'UTC')::text AS date,
+         COUNT(DISTINCT CASE WHEN table_name = 'symptom' THEN id END)::int AS symptoms,
+         COUNT(DISTINCT CASE WHEN table_name = 'mood'    THEN id END)::int AS moods,
+         COUNT(DISTINCT CASE WHEN table_name = 'weight'  THEN id END)::int AS weights
+       FROM (
+         SELECT id, logged_at, 'symptom' AS table_name FROM symptom_logs WHERE user_id = $1 AND logged_at > now() - ($2 || ' days')::interval
+         UNION ALL
+         SELECT id, logged_at, 'mood'    FROM mood_logs    WHERE user_id = $1 AND logged_at > now() - ($2 || ' days')::interval
+         UNION ALL
+         SELECT id, logged_at, 'weight'  FROM weight_logs  WHERE user_id = $1 AND logged_at > now() - ($2 || ' days')::interval
+       ) t
+       GROUP BY DATE(logged_at AT TIME ZONE 'UTC')
+       ORDER BY date ASC`,
+      [req.user.id, days]
+    );
+    return ok(res, { days: rows });
+  } catch (err) { return next(err); }
+});
+
+// WEEKLY SUMMARY — counts for current week grouped by type
+router.get('/weekly-summary', authRequired, apiLimiter, async (req, res, next) => {
+  try {
+    const [s, m, w, kick, streak] = await Promise.all([
+      db.query("SELECT COUNT(*)::int AS count FROM symptom_logs WHERE user_id = $1 AND logged_at > now() - interval '7 days'", [req.user.id]),
+      db.query("SELECT COUNT(*)::int AS count, ROUND(AVG(mood_score)::numeric,1)::float AS avg_score FROM mood_logs WHERE user_id = $1 AND logged_at > now() - interval '7 days'", [req.user.id]),
+      db.query("SELECT COUNT(*)::int AS count FROM weight_logs WHERE user_id = $1 AND logged_at > now() - interval '7 days'", [req.user.id]),
+      db.query("SELECT COUNT(*)::int AS sessions, COALESCE(SUM(kick_count),0)::int AS total_kicks FROM kick_counter_sessions WHERE user_id = $1 AND started_at > now() - interval '7 days'", [req.user.id]),
+      db.query("SELECT COUNT(DISTINCT DATE(logged_at))::int AS streak FROM mood_logs WHERE user_id = $1 AND logged_at > now() - interval '7 days'", [req.user.id]),
+    ]);
+    return ok(res, {
+      symptoms:    s.rows[0]?.count    ?? 0,
+      moods:       m.rows[0]?.count    ?? 0,
+      avgMoodScore: m.rows[0]?.avg_score ?? null,
+      weights:     w.rows[0]?.count    ?? 0,
+      kickSessions: kick.rows[0]?.sessions ?? 0,
+      totalKicks:  kick.rows[0]?.total_kicks ?? 0,
+      moodStreakDays: streak.rows[0]?.streak ?? 0,
+    });
   } catch (err) { return next(err); }
 });
 

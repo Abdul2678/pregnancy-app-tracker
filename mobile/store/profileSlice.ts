@@ -2,6 +2,7 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../lib/api';
+import { activatePostpartum } from './postpartumSlice';
 
 export interface UserProfile {
   currentWeek?:       number;
@@ -109,6 +110,10 @@ const profileSlice = createSlice({
       // fetchProfile
       .addCase(fetchProfile.fulfilled, (s, a) => {
         s.profile = a.payload;
+      })
+      // mirror postpartum activation so home screen switches immediately
+      .addCase(activatePostpartum.fulfilled, (s) => {
+        if (s.profile) s.profile.postpartum = true;
       });
   },
 });
