@@ -40,8 +40,8 @@ export default function BabyIllustration({ week, size = 200 }: Props) {
   useEffect(() => {
     breathe.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sine) }),
-        withTiming(0, { duration: 2400, easing: Easing.inOut(Easing.sine) }),
+        withTiming(1, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
       false,
@@ -50,8 +50,8 @@ export default function BabyIllustration({ week, size = 200 }: Props) {
     const timeout = setTimeout(() => {
       float.value = withRepeat(
         withSequence(
-          withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sine) }),
-          withTiming(0, { duration: 3200, easing: Easing.inOut(Easing.sine) }),
+          withTiming(1, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: 3200, easing: Easing.inOut(Easing.sin) }),
         ),
         -1,
         false,

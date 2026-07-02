@@ -110,7 +110,7 @@ function AuthGate() {
     }
 
     if (isAuthed && !isPartner) {
-      const onOnboarding = segments[1] === 'onboarding';
+      const onOnboarding = (segments as string[])[1] === 'onboarding';
       if (!onboardingCompleted && !onOnboarding && !inAuthGroup) {
         router.replace('/(auth)/onboarding');
       } else if (onboardingCompleted && inAuthGroup) {

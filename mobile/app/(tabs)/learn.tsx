@@ -117,7 +117,7 @@ function getMomChanges(c: FullWeekContent): string[] {
 function getTip(c: FullWeekContent): { title: string; body: string } | null {
   const raw = c.weekly_tip ?? c.weeklyTip;
   if (!raw) return null;
-  if (typeof raw === 'string') return { title: 'This Week's Tip', body: raw };
+  if (typeof raw === 'string') return { title: "This Week's Tip", body: raw };
   return raw;
 }
 

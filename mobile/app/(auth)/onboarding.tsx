@@ -862,7 +862,7 @@ function StepDate({
             onPress={() => {
               onDateTypeChange(t.key);
               if (t.key === 'ivf_transfer') onIVFChange(true);
-              else if (isIVF && t.key !== 'ivf_transfer') onIVFChange(false);
+              else if (isIVF) onIVFChange(false);
             }}
           >
             <Text style={[sd.tabText, dateType === t.key && sd.tabTextActive]}>{t.label}</Text>

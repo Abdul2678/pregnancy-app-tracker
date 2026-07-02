@@ -580,7 +580,7 @@ export default function HomeScreen() {
             <View style={s.commFooter}>
               <Ionicons name="chatbubble-outline" size={14} color={colors.textMuted} />
               <Text style={s.commReplies}>{communityPost.reply_count ?? 0} replies</Text>
-              <TouchableOpacity onPress={() => router.push('/(tabs)/community' as any)}>
+              <TouchableOpacity onPress={() => router.push('/features/community' as any)}>
                 <Text style={s.commJoin}>Join the conversation →</Text>
               </TouchableOpacity>
             </View>
@@ -589,7 +589,7 @@ export default function HomeScreen() {
           <View style={[s.card, s.emptyCard]}>
             <Text style={s.emptyEmoji}>💬</Text>
             <Text style={s.emptyTxt}>Be the first to post in your birth club!</Text>
-            <TouchableOpacity style={{ marginTop: 10 }} onPress={() => router.push('/(tabs)/community' as any)}>
+            <TouchableOpacity style={{ marginTop: 10 }} onPress={() => router.push('/features/community' as any)}>
               <Text style={s.commJoin}>Start a conversation →</Text>
             </TouchableOpacity>
           </View>

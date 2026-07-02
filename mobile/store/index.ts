@@ -16,9 +16,10 @@ import partner from './partnerSlice';
 import settings from './settingsSlice';
 import postpartum from './postpartumSlice';
 import subscription from './subscriptionSlice';
+import community from './communitySlice';
 
 export const store = configureStore({
-  reducer: { auth, chat, tracking, profile, home, development, mentalHealth, planner, partner, settings, postpartum, subscription },
+  reducer: { auth, chat, tracking, profile, home, development, mentalHealth, planner, partner, settings, postpartum, subscription, community },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),
 });

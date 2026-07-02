@@ -182,7 +182,7 @@ export default function ChatScreen() {
   const isStreaming = status === 'streaming';
 
   useEffect(() => {
-    AsyncStorage.getItem(DISCLAIMER_KEY).then((val) => {
+    AsyncStorage.getItem(DISCLAIMER_KEY).then((val: string | null) => {
       if (!val) setShowDisclaimer(true);
       setDisclaimerLoaded(true);
     });

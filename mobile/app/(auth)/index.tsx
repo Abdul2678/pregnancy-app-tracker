@@ -54,8 +54,9 @@ export default function Landing() {
 
   const socialSignIn = async (provider: string, identityToken?: string | null, displayName?: string) => {
     if (!identityToken) throw new Error('No identity token');
-    const api = (await import('../../lib/api')).default;
-    const { setTokens } = await import('../../lib/api');
+    const apiModule = require('../../lib/api');
+    const api = apiModule.default;
+    const { setTokens } = apiModule;
     const { data } = await api.post('/auth/social', { provider, identityToken, displayName });
     const d = data?.data ?? data;
     if (typeof setTokens === 'function') await setTokens(d.accessToken, d.refreshToken);
